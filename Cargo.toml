@@ -8,14 +8,18 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["console_error_panic_hook"]
+default = ["wee_alloc"]
 
 [dependencies]
 yew = "0.17"
+yew-router = "0.14.0"
 wasm-bindgen = "0.2.67"
-
-# The `console_error_panic_hook` crate provides better debugging of panics by
-# logging them with `console.error`. This is great for development, but requires
-# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
-# code size when deploying.
+log = "0.4.6"
+wasm-logger = "0.2.0"
+wee_alloc = { version = "0.4.5", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
+
+
+[dependencies.web-sys]
+version = "0.3.45"
+features = [ "FormData" ]
