@@ -1,23 +1,41 @@
+use crate::routes::login::Login;
+use crate::routes::AppRoute;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 pub(crate) struct App {
     link: ComponentLink<Self>,
+    current_route: AppRoute,
+    #[allow(unused)] // A component that owns this can send and receive messages from the agent.
+    router_agent: Box<dyn Bridge<RouteAgent>>,
 }
 
 pub(crate) enum Msg {
-    Submit,
+    ChangeRoute(Route),
+    LoggedIn(bool),
+    Logout,
 }
 
 impl Component for App {
     type Message = Msg;
     type Properties = ();
+
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link }
+        let router_agent = RouteAgent::bridge(link.callback(Msg::ChangeRoute));
+        let route: Route = RouteService::new().get_route();
+        Self {
+            link,
+            current_route: AppRoute::switch(route).unwrap(),
+            router_agent,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Submit => {}
+            Msg::ChangeRoute(r) => {
+                self.current_route = AppRoute::switch(r).unwrap();
+            }
+            _ => {}
         }
         true
     }
@@ -30,32 +48,33 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
+        let callback_login = self.link.callback(Msg::LoggedIn);
+        //let callback_logout = self.link.callback(|_| Msg::Logout);
+
         html! {
-            <form onsubmit=self.link.callback(|e: FocusEvent| {
-            e.prevent_default();
-            Msg::Submit
-            })>
-                <div class="row">
-                    <div class="col-xs-6 col-sm-offset-3">
-                        <div id="message-box"></div>
-                        <div class="form-group">
-                            <label title="Email Address" for="email_address">{ "Email Address:" }</label>
-                            <input name="email_address" type="email" value="" class="form-control"/>
-                        </div>
-                        <div class="form-group">
-                            <label title="Password" for="password">{ "Password:" }</label>
-                            <input id="password" name="password" type="password" class="form-control"/>
-                        </div>
-                        <div class="form-group">
-                            <input type="submit" id="submit" value="Login" class="btn btn-black btn-block" />
-                        </div>
-                        <br/>
-                        <div style="text-align: center">
-                            <a href="forgot_password">{ "Forgot Password?" }</a>
-                        </div>
-                    </div>
-                </div>
-            </form>
+            <>
+                //<Header current_user=&self.current_user/>
+                {
+                    // Routes to render sub components
+                    match &self.current_route {
+                        AppRoute::Login => html!{<Login callback=callback_login />},
+                        // AppRoute::Register => html!{<Register callback=callback_register />},
+                        AppRoute::Dashboard => html!{ {"Dashboard"} },
+                        // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
+                        // AppRoute::EditorCreate => html!{<Editor />},
+                        // AppRoute::Article(slug) => html!{<Article slug=slug current_user=&self.current_user />},
+                        // AppRoute::Settings => html!{<Settings callback=callback_logout />},
+                        // AppRoute::ProfileFavorites(username) => html!{
+                        //     <Profile username=username current_user=&self.current_user tab=ProfileTab::FavoritedBy />
+                        // },
+                        // AppRoute::Profile(username) => html!{
+                        //     <Profile username=username current_user=&self.current_user tab=ProfileTab::ByAuthor />
+                        // },
+                        _ => html!{}
+                    }
+                }
+                //<Footer />
+            </>
         }
     }
 }
