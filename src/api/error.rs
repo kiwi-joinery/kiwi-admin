@@ -11,7 +11,7 @@ pub struct Details {
 }
 
 #[derive(ThisError, Debug)]
-pub enum Error {
+pub enum APIError {
     /// 400
     #[error("BadRequest {0:?}")]
     BadRequest(Details),
@@ -38,27 +38,29 @@ pub enum Error {
     RequestError,
 }
 
-pub fn resolve<T>(response: Response<Text>) -> Result<T, Error>
+pub fn resolve<T>(response: Response<Text>) -> Result<T, APIError>
 where
     for<'de> T: Deserialize<'de>,
 {
     if let (meta, Ok(data)) = response.into_parts() {
         if meta.status.is_success() {
-            serde_json::from_str(&data).map_err(|e| Error::DeserializeError(e))
+            serde_json::from_str(&data).map_err(|e| APIError::DeserializeError(e))
         } else {
             let details: Option<Details> = serde_json::from_str(&data).ok();
             Err(match meta.status {
-                StatusCode::BAD_REQUEST if details.is_some() => Error::BadRequest(details.unwrap()),
-                StatusCode::UNAUTHORIZED if details.is_some() => {
-                    Error::Unauthorized(details.unwrap())
+                StatusCode::BAD_REQUEST if details.is_some() => {
+                    APIError::BadRequest(details.unwrap())
                 }
-                StatusCode::FORBIDDEN => Error::Forbidden,
-                StatusCode::NOT_FOUND => Error::NotFound,
-                StatusCode::INTERNAL_SERVER_ERROR => Error::InternalServerError,
-                _ => Error::UnknownError(meta.status),
+                StatusCode::UNAUTHORIZED if details.is_some() => {
+                    APIError::Unauthorized(details.unwrap())
+                }
+                StatusCode::FORBIDDEN => APIError::Forbidden,
+                StatusCode::NOT_FOUND => APIError::NotFound,
+                StatusCode::INTERNAL_SERVER_ERROR => APIError::InternalServerError,
+                _ => APIError::UnknownError(meta.status),
             })
         }
     } else {
-        Err(Error::RequestError)
+        Err(APIError::RequestError)
     }
 }
