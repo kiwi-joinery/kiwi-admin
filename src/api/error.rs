@@ -10,6 +10,7 @@ pub struct Details {
     pub description: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(ThisError, Debug)]
 pub enum APIError {
     /// 400
