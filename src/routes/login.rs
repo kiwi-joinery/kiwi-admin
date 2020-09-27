@@ -1,5 +1,5 @@
+use crate::api::session::LoginResponse;
 use crate::routes::AppRoute;
-use yew::services::fetch::FetchTask;
 use yew::{html, Callback, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
 use yew_router::prelude::*;
 
@@ -12,7 +12,7 @@ pub struct Login {
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
     /// Callback when user is logged in successfully
-    pub callback: Callback<bool>,
+    pub callback: Callback<LoginResponse>,
 }
 
 pub enum Msg {

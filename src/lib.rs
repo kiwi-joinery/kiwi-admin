@@ -1,5 +1,6 @@
 #![recursion_limit = "1024"]
 
+#[allow(dead_code)]
 mod api;
 mod app;
 mod routes;

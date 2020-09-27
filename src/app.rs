@@ -1,3 +1,4 @@
+use crate::api::session::LoginResponse;
 use crate::routes::login::Login;
 use crate::routes::AppRoute;
 use yew::prelude::*;
@@ -12,7 +13,7 @@ pub(crate) struct App {
 
 pub(crate) enum Msg {
     ChangeRoute(Route),
-    LoggedIn(bool),
+    LoggedIn(LoginResponse),
     Logout,
 }
 
