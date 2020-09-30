@@ -1,9 +1,11 @@
-if command -v cmd.exe &>/dev/null; then
-  WSL="cmd.exe /c"
+if cat /proc/version | grep microsoft; then
+  CMD="cmd.exe /c"
+  PWD=$(wslpath -w $(pwd))
 else
-  WSL=
+  CMD=
+  PWD=$(pwd)
 fi
 
-$WSL wasm-pack build --target web -- --features console_error_panic_hook
-$WSL rollup ./main.js --format iife --file ./pkg/bundle.js
-$WSL http-server -p 8001 --proxy http://localhost:8001?
+$CMD wasm-pack build --target web -- --features console_error_panic_hook
+$CMD rollup ./main.js --format iife --file ./pkg/bundle.js
+$CMD docker run -it --rm -p 8001:80 -v $PWD:/usr/share/nginx/html -v $PWD/nginx:/etc/nginx:ro nginx

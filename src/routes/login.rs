@@ -1,4 +1,5 @@
 use crate::api::session::LoginResponse;
+use crate::app::AppState;
 use crate::routes::AppRoute;
 use std::convert::TryInto;
 use wasm_bindgen::JsValue;
@@ -13,15 +14,15 @@ struct LoginForm {
     password: String,
 }
 
-/// Login page
 pub struct Login {
     props: Props,
     link: ComponentLink<Self>,
     form: LoginForm,
 }
 
-#[derive(PartialEq, Properties, Clone)]
+#[derive(Properties, Clone)]
 pub struct Props {
+    pub state: AppState,
     pub callback: Callback<LoginResponse>,
 }
 

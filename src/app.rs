@@ -1,17 +1,27 @@
 use crate::api::session::LoginResponse;
+use crate::api::APIClient;
 use crate::routes::login::Login;
 use crate::routes::AppRoute;
+use core::cell::RefCell;
+use std::rc::Rc;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-pub(crate) struct App {
+pub struct App {
     link: ComponentLink<Self>,
     current_route: AppRoute,
     #[allow(unused)] // A component that owns this can send and receive messages from the agent.
     router_agent: Box<dyn Bridge<RouteAgent>>,
+    state: AppState,
 }
 
-pub(crate) enum Msg {
+pub struct State {
+    api: APIClient,
+}
+
+pub type AppState = Rc<RefCell<State>>;
+
+pub enum Msg {
     ChangeRoute(Route),
     LoggedIn(LoginResponse),
     Logout,
@@ -28,6 +38,9 @@ impl Component for App {
             link,
             current_route: AppRoute::switch(route).unwrap(),
             router_agent,
+            state: Rc::new(RefCell::new(State {
+                api: APIClient::new("http://localhost:9000/api"),
+            })),
         }
     }
 
@@ -58,7 +71,7 @@ impl Component for App {
                 {
                     // Routes to render sub components
                     match &self.current_route {
-                        AppRoute::Login => html!{<Login callback=callback_login />},
+                        AppRoute::Login => html!{<Login callback=callback_login state=Rc::clone(&self.state) />},
                         // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},

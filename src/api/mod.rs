@@ -3,6 +3,7 @@ use headers::authorization::Basic;
 use headers::{Authorization, HeaderMapExt};
 use http::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use url::Url;
 use yew::format::{Json, Nothing, Text};
 use yew::services::fetch::{FetchService, FetchTask};
@@ -19,9 +20,9 @@ pub struct APIClient {
 }
 
 impl APIClient {
-    pub fn new(base_url: Url) -> Self {
+    pub fn new(base_url: &str) -> Self {
         APIClient {
-            base_url,
+            base_url: Url::from_str(base_url).unwrap(),
             auth_header: None,
         }
     }
