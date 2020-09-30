@@ -1,11 +1,11 @@
 use crate::api::error::resolve;
 use headers::authorization::Basic;
-use headers::{Authorization, HeaderMapExt};
+use headers::{Authorization, ContentType, HeaderMapExt};
 use http::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use url::Url;
-use yew::format::{Json, Nothing, Text};
+use yew::format::Text;
 use yew::services::fetch::{FetchService, FetchTask};
 use yew::Callback;
 
@@ -48,17 +48,22 @@ impl APIClient {
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
-        B: Into<Text>,
+        B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
         let mut url = self.base_url.join(path).unwrap();
         url.query_pairs_mut().extend_pairs(query);
         let mut builder = Request::builder().method(method).uri(url.as_str());
-        self.auth_header.as_ref().map(|a| {
-            builder.headers_mut().unwrap().typed_insert(a.clone());
-        });
+        match B::content_type() {
+            Some(c) => builder.headers_mut().unwrap().typed_insert(c),
+            None => {}
+        }
+        match self.auth_header.as_ref() {
+            Some(a) => builder.headers_mut().unwrap().typed_insert(a.clone()),
+            None => {}
+        }
         let handler = move |response: Response<Text>| callback.emit(resolve(response));
-        FetchService::fetch(builder.body(body).unwrap(), handler.into()).unwrap()
+        FetchService::fetch(builder.body(Ok(body.to_string())).unwrap(), handler.into()).unwrap()
     }
 
     #[inline]
@@ -71,7 +76,7 @@ impl APIClient {
     where
         for<'de> T: Deserialize<'de> + 'static,
     {
-        self.request(path, query, Method::GET, Nothing, callback)
+        self.request(path, query, Method::GET, Empty, callback)
     }
 
     #[inline]
@@ -83,10 +88,9 @@ impl APIClient {
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
-        B: Serialize,
+        B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
-        let body: Text = Json(&body).into();
         self.request(path, query, Method::POST, body, callback)
     }
 
@@ -99,10 +103,9 @@ impl APIClient {
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
-        B: Serialize,
+        B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
-        let body: Text = Json(&body).into();
         self.request(path, query, Method::PUT, body, callback)
     }
 
@@ -116,6 +119,33 @@ impl APIClient {
     where
         for<'de> T: Deserialize<'de> + 'static,
     {
-        self.request(path, query, Method::DELETE, Nothing, callback)
+        self.request(path, query, Method::DELETE, Empty, callback)
+    }
+}
+
+pub trait TextBody {
+    fn content_type() -> Option<ContentType>;
+    fn to_string(&self) -> String;
+}
+
+pub struct Empty;
+
+impl TextBody for Empty {
+    fn content_type() -> Option<ContentType> {
+        None
+    }
+    fn to_string(&self) -> String {
+        String::new()
+    }
+}
+
+pub struct FormUrlEncoded<T>(T);
+
+impl<T: Serialize> TextBody for FormUrlEncoded<T> {
+    fn content_type() -> Option<ContentType> {
+        Some(ContentType::form_url_encoded())
+    }
+    fn to_string(&self) -> String {
+        serde_urlencoded::to_string(&self.0).unwrap()
     }
 }

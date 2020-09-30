@@ -29,7 +29,7 @@ impl APIClient {
         &self,
         callback: Callback<Result<GalleryListResponse, APIError>>,
     ) -> FetchTask {
-        self.get("/gallery/list", vec![], callback)
+        self.get("gallery/list", vec![], callback)
     }
 
     // pub fn gallery_create(
