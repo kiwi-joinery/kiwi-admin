@@ -27,6 +27,10 @@ impl APIClient {
         }
     }
 
+    pub fn has_auth_header(&self) -> bool {
+        self.auth_header.is_some()
+    }
+
     pub fn add_auth_header(&mut self, a: Authorization<Basic>) {
         self.auth_header = Some(a)
     }

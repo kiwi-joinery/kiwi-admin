@@ -1,12 +1,15 @@
+use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
 use crate::app::AppState;
 use crate::routes::AppRoute;
-use std::convert::TryInto;
 use wasm_bindgen::JsValue;
-use web_sys::Event;
-use web_sys::FormData;
+use web_sys::{FormData, HtmlFormElement};
+use yew::services::fetch::FetchTask;
 use yew::{html, Callback, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
 use yew_router::prelude::*;
+
+const FIELD_EMAIL: &str = "email";
+const FIELD_PASSWORD: &str = "password";
 
 #[derive(Default)]
 struct LoginForm {
@@ -18,6 +21,7 @@ pub struct Login {
     props: Props,
     link: ComponentLink<Self>,
     form: LoginForm,
+    task: Option<FetchTask>,
 }
 
 #[derive(Properties, Clone)]
@@ -28,6 +32,7 @@ pub struct Props {
 
 pub enum Msg {
     SubmitForm(FormData),
+    LoginResponse(Result<LoginResponse, APIError>),
 }
 
 impl Component for Login {
@@ -39,15 +44,23 @@ impl Component for Login {
             props,
             link,
             form: Default::default(),
+            task: None,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::SubmitForm(fd) => {
-                self.form.email = fd.get("email").as_string().unwrap();
-                self.form.password = fd.get("password").as_string().unwrap();
+                self.form.email = fd.get(FIELD_EMAIL).as_string().unwrap();
+                self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
+
+                self.task = Some(self.props.state.borrow().api_client.session_login(
+                    self.form.email.clone(),
+                    self.form.password.clone(),
+                    self.link.callback(Msg::LoginResponse),
+                ));
             }
+            _ => {}
         }
         true
     }
@@ -60,7 +73,8 @@ impl Component for Login {
     fn view(&self) -> Html {
         let onsubmit = self.link.callback(|e: FocusEvent| {
             e.prevent_default();
-            let fd = FormData::from(JsValue::from(e.target().unwrap()));
+            let f: HtmlFormElement = JsValue::from(e.target().unwrap()).into();
+            let fd = FormData::new_with_form(&f).unwrap();
             Msg::SubmitForm(fd)
         });
 
@@ -77,6 +91,7 @@ impl Component for Login {
                                         class="form-control form-control-lg"
                                         type="email"
                                         placeholder="Email"
+                                        name=FIELD_EMAIL
                                         value=&self.form.email
                                         />
                                 </fieldset>
@@ -85,6 +100,7 @@ impl Component for Login {
                                         class="form-control form-control-lg"
                                         type="password"
                                         placeholder="Password"
+                                        name=FIELD_PASSWORD
                                         value=&self.form.password
                                         />
                                 </fieldset>

@@ -1,11 +1,18 @@
 use crate::api::session::LoginResponse;
+use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
+use crate::components::auth::PersistedAuth;
 use crate::routes::login::Login;
 use crate::routes::AppRoute;
 use core::cell::RefCell;
 use std::rc::Rc;
 use yew::prelude::*;
 use yew_router::prelude::*;
+
+#[cfg(debug_assertions)]
+const API_URL: &str = "http://localhost:8001/api/";
+#[cfg(not(debug_assertions))]
+const API_URL: &str = "https://api.kiwijoinerydevon.co.uk";
 
 pub struct App {
     link: ComponentLink<Self>,
@@ -16,7 +23,8 @@ pub struct App {
 }
 
 pub struct State {
-    api: APIClient,
+    pub api_client: APIClient,
+    pub user: Option<UserResponseItem>,
 }
 
 pub type AppState = Rc<RefCell<State>>;
@@ -34,12 +42,17 @@ impl Component for App {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let router_agent = RouteAgent::bridge(link.callback(Msg::ChangeRoute));
         let route: Route = RouteService::new().get_route();
+        let mut client = APIClient::new(API_URL);
+        PersistedAuth::load().map(|a| {
+            client.add_auth_header(a.into());
+        });
         Self {
             link,
             current_route: AppRoute::switch(route).unwrap(),
             router_agent,
             state: Rc::new(RefCell::new(State {
-                api: APIClient::new("http://localhost:9000/api"),
+                api_client: client,
+                user: None,
             })),
         }
     }
@@ -55,9 +68,6 @@ impl Component for App {
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
         false
     }
 

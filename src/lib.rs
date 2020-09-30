@@ -3,6 +3,7 @@
 #[allow(dead_code)]
 mod api;
 mod app;
+mod components;
 mod routes;
 
 use app::App;

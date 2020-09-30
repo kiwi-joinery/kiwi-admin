@@ -22,7 +22,7 @@ impl APIClient {
         let mut body = HashMap::new();
         body.insert("email", email);
         body.insert("password", password);
-        self.post("/sessions/login", vec![], body, callback)
+        self.post("sessions/login", vec![], body, callback)
     }
 
     pub fn session_logout(&self, callback: Callback<Result<(), APIError>>) -> FetchTask {

@@ -1,6 +1,5 @@
 use crate::api::error::APIError;
 use crate::api::APIClient;
-use http::Method;
 use serde::Deserialize;
 use std::collections::HashMap;
 use url::Url;
