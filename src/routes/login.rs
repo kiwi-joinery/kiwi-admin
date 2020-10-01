@@ -1,6 +1,7 @@
 use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
 use crate::app::AppStateRef;
+use crate::components::error::ErrorAlert;
 use crate::routes::AppRoute;
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
@@ -101,7 +102,6 @@ impl Component for Login {
                 <div class="row">
                     <div class="col-md-6 offset-md-3 col-xs-12">
                         <h1 class="text-xs-center">{ "Sign In" }</h1>
-                        // <ListErrors error=&self.error />
                         <form onsubmit=onsubmit>
                             <fieldset>
                                 <fieldset class="form-group">
@@ -127,6 +127,7 @@ impl Component for Login {
                                         { "Forgot Password?" }
                                     </RouterAnchor<AppRoute>>
                                 </p>
+                                <ErrorAlert error=&self.error />
                                 <button
                                     class="btn btn-lg btn-primary pull-xs-right"
                                     type="submit"

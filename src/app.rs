@@ -11,7 +11,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 #[cfg(debug_assertions)]
-const API_URL: &str = "http://localhost:8002/api/";
+const API_URL: &str = "http://localhost:8001/api/";
 #[cfg(not(debug_assertions))]
 const API_URL: &str = "https://api.kiwijoinerydevon.co.uk";
 

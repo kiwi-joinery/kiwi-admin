@@ -4,14 +4,14 @@ use thiserror::Error as ThisError;
 use yew::format::Text;
 use yew::services::fetch::Response;
 
-#[derive(Deserialize, Debug)]
+#[derive(PartialEq, Deserialize, Debug, Clone)]
 pub struct Details {
     pub code: String,
     pub description: Option<String>,
 }
 
 #[allow(dead_code)]
-#[derive(ThisError, Debug)]
+#[derive(ThisError, Debug, Clone, PartialEq)]
 pub enum APIError {
     /// 400
     #[error("BadRequest {0:?}")]
@@ -33,7 +33,7 @@ pub enum APIError {
     UnknownError(StatusCode),
     /// serde deserialize error
     #[error("Deserialize Error")]
-    DeserializeError(serde_json::Error),
+    DeserializeError,
     /// request error
     #[error("Http Request Error")]
     RequestError,
@@ -45,7 +45,7 @@ where
 {
     if let (meta, Ok(data)) = response.into_parts() {
         if meta.status.is_success() {
-            serde_json::from_str(&data).map_err(|e| APIError::DeserializeError(e))
+            serde_json::from_str(&data).map_err(|_| APIError::DeserializeError)
         } else {
             let details: Option<Details> = serde_json::from_str(&data).ok();
             Err(match meta.status {
