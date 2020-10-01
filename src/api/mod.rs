@@ -14,6 +14,7 @@ pub mod gallery;
 pub mod session;
 pub mod users;
 
+#[derive(PartialEq, Clone)]
 pub struct APIClient {
     base_url: Url,
     auth_header: Option<Authorization<Basic>>,

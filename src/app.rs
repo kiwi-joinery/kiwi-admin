@@ -1,12 +1,8 @@
 use crate::api::session::LoginResponse;
-use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
 use crate::auth::PersistedAuth;
 use crate::routes::login::Login;
 use crate::routes::AppRoute;
-use core::cell::RefCell;
-use std::rc::Rc;
-use wasm_bindgen::__rt::core::ops::{Deref, DerefMut};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -20,35 +16,7 @@ pub struct App {
     current_route: AppRoute,
     #[allow(unused)] // A component that owns this can send and receive messages from the agent.
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    state: AppStateRef,
-}
-
-pub struct AppState {
-    pub api_client: APIClient,
-    pub user: Option<UserResponseItem>,
-}
-
-#[derive(Clone)]
-pub struct AppStateRef(Rc<RefCell<AppState>>);
-
-impl PartialEq for AppStateRef {
-    fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.0, &other.0)
-    }
-}
-
-impl Deref for AppStateRef {
-    type Target = Rc<RefCell<AppState>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for AppStateRef {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    client: APIClient,
 }
 
 pub enum Msg {
@@ -72,10 +40,7 @@ impl Component for App {
             link,
             current_route: AppRoute::switch(route).unwrap(),
             router_agent,
-            state: AppStateRef(Rc::new(RefCell::new(AppState {
-                api_client: client,
-                user: None,
-            }))),
+            client,
         }
     }
 
@@ -85,11 +50,13 @@ impl Component for App {
                 self.current_route = AppRoute::switch(r).unwrap();
             }
             Msg::LoggedIn(r) => {
-                let mut s = self.state.borrow_mut();
                 let auth = PersistedAuth::persist(r.user.id, r.token);
-                s.api_client.add_auth_header(auth.into());
+                self.client.add_auth_header(auth.into());
             }
-            Msg::Logout => {}
+            Msg::Logout => {
+                PersistedAuth::remove();
+                self.client.remove_auth_header();
+            }
         }
         true
     }
@@ -105,7 +72,7 @@ impl Component for App {
                 {
                     // Routes to render sub components
                     match &self.current_route {
-                        AppRoute::Login => html!{<Login callback=self.link.callback(Msg::LoggedIn) state=self.state.clone() />},
+                        AppRoute::Login => html!{<Login callback=self.link.callback(Msg::LoggedIn) client=self.client.clone() />},
                         // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},

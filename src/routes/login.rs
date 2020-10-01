@@ -1,6 +1,6 @@
 use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
-use crate::app::AppStateRef;
+use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::routes::AppRoute;
 use wasm_bindgen::JsValue;
@@ -28,7 +28,7 @@ pub struct Login {
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
-    pub state: AppStateRef,
+    pub client: APIClient,
     pub callback: Callback<LoginResponse>,
 }
 
@@ -58,7 +58,7 @@ impl Component for Login {
                 self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
                 if self.task.is_none() {
                     self.error = None;
-                    self.task = Some(self.props.state.borrow().api_client.session_login(
+                    self.task = Some(self.props.client.session_login(
                         self.form.email.clone(),
                         self.form.password.clone(),
                         self.link.callback(Msg::Response),
