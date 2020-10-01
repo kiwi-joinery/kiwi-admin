@@ -3,6 +3,7 @@
 #[allow(dead_code)]
 mod api;
 mod app;
+pub mod auth;
 mod components;
 mod routes;
 

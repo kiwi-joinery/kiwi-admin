@@ -139,7 +139,7 @@ impl TextBody for Empty {
     }
 }
 
-pub struct FormUrlEncoded<T>(T);
+pub struct FormUrlEncoded<T: Serialize>(T);
 
 impl<T: Serialize> TextBody for FormUrlEncoded<T> {
     fn content_type() -> Option<ContentType> {

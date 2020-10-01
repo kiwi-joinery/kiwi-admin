@@ -1,6 +1,6 @@
 use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
-use crate::app::AppState;
+use crate::app::AppStateRef;
 use crate::routes::AppRoute;
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
@@ -22,17 +22,18 @@ pub struct Login {
     link: ComponentLink<Self>,
     form: LoginForm,
     task: Option<FetchTask>,
+    error: Option<APIError>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(PartialEq, Properties, Clone)]
 pub struct Props {
-    pub state: AppState,
+    pub state: AppStateRef,
     pub callback: Callback<LoginResponse>,
 }
 
 pub enum Msg {
-    SubmitForm(FormData),
-    LoginResponse(Result<LoginResponse, APIError>),
+    Submit(FormData),
+    Response(Result<LoginResponse, APIError>),
 }
 
 impl Component for Login {
@@ -45,29 +46,46 @@ impl Component for Login {
             link,
             form: Default::default(),
             task: None,
+            error: None,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::SubmitForm(fd) => {
+            Msg::Submit(fd) => {
                 self.form.email = fd.get(FIELD_EMAIL).as_string().unwrap();
                 self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
-
-                self.task = Some(self.props.state.borrow().api_client.session_login(
-                    self.form.email.clone(),
-                    self.form.password.clone(),
-                    self.link.callback(Msg::LoginResponse),
-                ));
+                if self.task.is_none() {
+                    self.error = None;
+                    self.task = Some(self.props.state.borrow().api_client.session_login(
+                        self.form.email.clone(),
+                        self.form.password.clone(),
+                        self.link.callback(Msg::Response),
+                    ));
+                }
             }
-            _ => {}
+            Msg::Response(r) => {
+                self.task = None;
+                match r {
+                    Ok(s) => {
+                        self.props.callback.emit(s);
+                    }
+                    Err(e) => {
+                        self.error = Some(e);
+                    }
+                }
+            }
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props != props {
+            self.props = props;
+            true
+        } else {
+            false
+        }
     }
 
     fn view(&self) -> Html {
@@ -75,7 +93,7 @@ impl Component for Login {
             e.prevent_default();
             let f: HtmlFormElement = JsValue::from(e.target().unwrap()).into();
             let fd = FormData::new_with_form(&f).unwrap();
-            Msg::SubmitForm(fd)
+            Msg::Submit(fd)
         });
 
         html! {

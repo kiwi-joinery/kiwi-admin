@@ -1,16 +1,17 @@
 use crate::api::session::LoginResponse;
 use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
-use crate::components::auth::PersistedAuth;
+use crate::auth::PersistedAuth;
 use crate::routes::login::Login;
 use crate::routes::AppRoute;
 use core::cell::RefCell;
 use std::rc::Rc;
+use wasm_bindgen::__rt::core::ops::{Deref, DerefMut};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 #[cfg(debug_assertions)]
-const API_URL: &str = "http://localhost:8001/api/";
+const API_URL: &str = "http://localhost:8002/api/";
 #[cfg(not(debug_assertions))]
 const API_URL: &str = "https://api.kiwijoinerydevon.co.uk";
 
@@ -19,15 +20,36 @@ pub struct App {
     current_route: AppRoute,
     #[allow(unused)] // A component that owns this can send and receive messages from the agent.
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    state: AppState,
+    state: AppStateRef,
 }
 
-pub struct State {
+pub struct AppState {
     pub api_client: APIClient,
     pub user: Option<UserResponseItem>,
 }
 
-pub type AppState = Rc<RefCell<State>>;
+#[derive(Clone)]
+pub struct AppStateRef(Rc<RefCell<AppState>>);
+
+impl PartialEq for AppStateRef {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl Deref for AppStateRef {
+    type Target = Rc<RefCell<AppState>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for AppStateRef {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 pub enum Msg {
     ChangeRoute(Route),
@@ -50,10 +72,10 @@ impl Component for App {
             link,
             current_route: AppRoute::switch(route).unwrap(),
             router_agent,
-            state: Rc::new(RefCell::new(State {
+            state: AppStateRef(Rc::new(RefCell::new(AppState {
                 api_client: client,
                 user: None,
-            })),
+            }))),
         }
     }
 
@@ -62,7 +84,12 @@ impl Component for App {
             Msg::ChangeRoute(r) => {
                 self.current_route = AppRoute::switch(r).unwrap();
             }
-            _ => {}
+            Msg::LoggedIn(r) => {
+                let mut s = self.state.borrow_mut();
+                let auth = PersistedAuth::persist(r.user.id, r.token);
+                s.api_client.add_auth_header(auth.into());
+            }
+            Msg::Logout => {}
         }
         true
     }
@@ -72,16 +99,13 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        let callback_login = self.link.callback(Msg::LoggedIn);
-        //let callback_logout = self.link.callback(|_| Msg::Logout);
-
         html! {
             <>
                 //<Header current_user=&self.current_user/>
                 {
                     // Routes to render sub components
                     match &self.current_route {
-                        AppRoute::Login => html!{<Login callback=callback_login state=Rc::clone(&self.state) />},
+                        AppRoute::Login => html!{<Login callback=self.link.callback(Msg::LoggedIn) state=self.state.clone() />},
                         // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},

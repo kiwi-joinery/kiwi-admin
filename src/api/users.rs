@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
 use yew::Callback;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct UserResponseItem {
     pub id: i32,
     pub name: String,
