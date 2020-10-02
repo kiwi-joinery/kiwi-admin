@@ -1,40 +1,74 @@
+use std::time::Duration;
+use yew::services::timeout::TimeoutTask;
+use yew::services::TimeoutService;
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 
 pub struct LoadingComponent {
-    props: Props,
+    props: LoadingProps,
+    timeout: Option<TimeoutTask>,
+    link: ComponentLink<Self>,
+    delayed_active: bool,
 }
 
-#[derive(PartialEq, Properties, Clone)]
-pub struct Props {
+#[derive(PartialEq, Properties, Clone, Default)]
+pub struct LoadingProps {
     pub active: bool,
     pub text: Option<String>,
 }
 
-impl Component for LoadingComponent {
-    type Message = ();
-    type Properties = Props;
+pub enum Msg {
+    Update,
+}
 
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Self { props }
+// Wait before displaying the loader - if it finishes before this time then it is never shown.
+const ONLY_SHOW_AFTER_MILLIS: u64 = 500;
+// If the loader is shown it must appear for at least this time - so it doesn't do an ugly flash
+const SHOW_FOR_AT_LEAST_MILLIS: u64 = 300;
+
+impl Component for LoadingComponent {
+    type Message = Msg;
+    type Properties = LoadingProps;
+
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let a = props.active;
+        Self {
+            props,
+            timeout: None,
+            link,
+            delayed_active: a,
+        }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::Update => self.delayed_active = self.props.active,
+        }
+        true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props != props {
+        if props.active != self.props.active {
+            self.timeout = None;
+            let mil = if props.active {
+                ONLY_SHOW_AFTER_MILLIS
+            } else {
+                SHOW_FOR_AT_LEAST_MILLIS
+            };
             self.props = props;
-            true
+            self.timeout = Some(TimeoutService::spawn(
+                Duration::from_millis(mil),
+                self.link.callback(|_| Msg::Update),
+            ));
         } else {
-            false
+            self.props = props;
         }
+        true
     }
 
     fn view(&self) -> Html {
         html! {
             {
-                if self.props.active {
+                if self.delayed_active {
                     html!{
                         <div id="loading-component">
                             <div class="spinner"></div>

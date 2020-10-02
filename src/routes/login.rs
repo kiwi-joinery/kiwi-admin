@@ -1,7 +1,9 @@
 use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
 use crate::api::APIClient;
+use crate::app::AppMessage;
 use crate::components::error::ErrorAlert;
+use crate::components::loading::LoadingProps;
 use crate::routes::AppRoute;
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
@@ -29,7 +31,7 @@ pub struct Login {
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
     pub client: APIClient,
-    pub callback: Callback<LoginResponse>,
+    pub callback: Callback<AppMessage>,
 }
 
 pub enum Msg {
@@ -58,6 +60,12 @@ impl Component for Login {
                 self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
                 if self.task.is_none() {
                     self.error = None;
+                    self.props
+                        .callback
+                        .emit(AppMessage::UpdatedLoading(LoadingProps {
+                            active: true,
+                            text: Some("Loading...".to_string()),
+                        }));
                     self.task = Some(self.props.client.session_login(
                         self.form.email.clone(),
                         self.form.password.clone(),
@@ -67,9 +75,15 @@ impl Component for Login {
             }
             Msg::Response(r) => {
                 self.task = None;
+                self.props
+                    .callback
+                    .emit(AppMessage::UpdatedLoading(LoadingProps {
+                        active: false,
+                        text: None,
+                    }));
                 match r {
                     Ok(s) => {
-                        self.props.callback.emit(s);
+                        self.props.callback.emit(AppMessage::LoggedIn(s));
                     }
                     Err(e) => {
                         self.error = Some(e);
