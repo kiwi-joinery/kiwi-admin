@@ -13,23 +13,16 @@ pub struct Details {
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum APIError {
-    /// 400
     BadRequest(Details),
-    /// 401
     Unauthorized(Details),
-    /// 403
     Forbidden,
-    /// 404
     NotFound,
-    /// 500
     InternalServerError,
-    /// An unrecognised server error code/format
     UnknownError(StatusCode),
-    /// serde deserialize error
     DeserializeError,
-    /// request error
     RequestError,
 }
+
 impl std::error::Error for APIError {}
 
 impl Display for APIError {

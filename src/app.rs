@@ -1,6 +1,7 @@
 use crate::api::session::LoginResponse;
 use crate::api::APIClient;
 use crate::auth::PersistedAuth;
+use crate::components::loading::LoadingComponent;
 use crate::routes::login::Login;
 use crate::routes::AppRoute;
 use yew::prelude::*;
@@ -69,6 +70,7 @@ impl Component for App {
         html! {
             <>
                 //<Header current_user=&self.current_user/>
+                <LoadingComponent active=false text=Option::<String>::None/>
                 {
                     // Routes to render sub components
                     match &self.current_route {
