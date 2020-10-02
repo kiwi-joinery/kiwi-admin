@@ -1,6 +1,6 @@
 use http::StatusCode;
 use serde::Deserialize;
-use thiserror::Error as ThisError;
+use std::fmt::{Display, Formatter};
 use yew::format::Text;
 use yew::services::fetch::Response;
 
@@ -11,32 +11,49 @@ pub struct Details {
 }
 
 #[allow(dead_code)]
-#[derive(ThisError, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum APIError {
     /// 400
-    #[error("BadRequest {0:?}")]
     BadRequest(Details),
     /// 401
-    #[error("Unauthorized {0:?}")]
     Unauthorized(Details),
     /// 403
-    #[error("Forbidden")]
     Forbidden,
     /// 404
-    #[error("Not Found")]
     NotFound,
     /// 500
-    #[error("Internal Server Error")]
     InternalServerError,
     /// An unrecognised server error code/format
-    #[error("Unknown Server Error")]
     UnknownError(StatusCode),
     /// serde deserialize error
-    #[error("Deserialize Error")]
     DeserializeError,
     /// request error
-    #[error("Http Request Error")]
     RequestError,
+}
+impl std::error::Error for APIError {}
+
+impl Display for APIError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        let m = match self {
+            APIError::BadRequest(d) => format!(
+                "Bad request: {}",
+                d.description.as_ref().unwrap_or(&"".to_string())
+            ),
+            APIError::Unauthorized(d) => match d.code.as_str() {
+                "INCORRECT_CREDENTIALS" => "Incorrect username or password",
+                "MISSING_CREDENTIALS" => "Request missing username or password",
+                _ => "Unauthorized",
+            }
+            .to_string(),
+            APIError::Forbidden => "Forbidden".to_string(),
+            APIError::NotFound => "Resource not found".to_string(),
+            APIError::InternalServerError => "Internal server error".to_string(),
+            APIError::UnknownError(c) => format!("Unknown Error (HTTP {})", c.as_u16()),
+            APIError::DeserializeError => "Could not parse server response".to_string(),
+            APIError::RequestError => "Request failed, please check your connection".to_string(),
+        };
+        write!(f, "{}", m)
+    }
 }
 
 pub fn resolve<T>(response: Response<Text>) -> Result<T, APIError>
