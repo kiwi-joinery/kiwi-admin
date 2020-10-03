@@ -1,14 +1,13 @@
 use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
 use crate::api::APIClient;
-use crate::app::AppMessage;
+use crate::app::{App, AppMessage};
 use crate::components::error::ErrorAlert;
-use crate::components::loading::LoadingProps;
 use crate::routes::AppRoute;
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
 use yew::services::fetch::FetchTask;
-use yew::{html, Callback, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
+use yew::{html, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
 use yew_router::prelude::*;
 
 const FIELD_EMAIL: &str = "email";
@@ -28,10 +27,10 @@ pub struct Login {
     error: Option<APIError>,
 }
 
-#[derive(PartialEq, Properties, Clone)]
+#[derive(Properties, Clone)]
 pub struct Props {
     pub client: APIClient,
-    pub callback: Callback<AppMessage>,
+    pub app: ComponentLink<App>,
 }
 
 pub enum Msg {
@@ -60,30 +59,19 @@ impl Component for Login {
                 self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
                 if self.task.is_none() {
                     self.error = None;
-                    self.props
-                        .callback
-                        .emit(AppMessage::UpdatedLoading(LoadingProps {
-                            active: true,
-                            text: Some("Loading...".to_string()),
-                        }));
                     self.task = Some(self.props.client.session_login(
                         self.form.email.clone(),
                         self.form.password.clone(),
+                        self.props.app.callback(AppMessage::GlobalLoader),
                         self.link.callback(Msg::Response),
                     ));
                 }
             }
             Msg::Response(r) => {
                 self.task = None;
-                self.props
-                    .callback
-                    .emit(AppMessage::UpdatedLoading(LoadingProps {
-                        active: false,
-                        text: None,
-                    }));
                 match r {
                     Ok(s) => {
-                        self.props.callback.emit(AppMessage::LoggedIn(s));
+                        self.props.app.send_message(AppMessage::LoggedIn(s));
                     }
                     Err(e) => {
                         self.error = Some(e);
@@ -95,12 +83,8 @@ impl Component for Login {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props != props {
-            self.props = props;
-            true
-        } else {
-            false
-        }
+        self.props = props;
+        true
     }
 
     fn view(&self) -> Html {

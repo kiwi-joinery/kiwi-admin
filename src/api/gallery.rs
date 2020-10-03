@@ -1,5 +1,5 @@
 use crate::api::error::APIError;
-use crate::api::APIClient;
+use crate::api::{APIClient, ProgressCallback};
 use serde::Deserialize;
 use std::collections::HashMap;
 use url::Url;
@@ -27,9 +27,10 @@ pub struct GalleryFileResponse {
 impl APIClient {
     pub fn gallery_list(
         &self,
+        progress: ProgressCallback,
         callback: Callback<Result<GalleryListResponse, APIError>>,
     ) -> FetchTask {
-        self.get("gallery/list", vec![], callback)
+        self.get("gallery/list", vec![], Some(progress), callback)
     }
 
     // pub fn gallery_create(

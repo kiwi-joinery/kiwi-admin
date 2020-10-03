@@ -1,5 +1,5 @@
 use crate::api::error::APIError;
-use crate::api::{APIClient, FormUrlEncoded};
+use crate::api::{APIClient, FormUrlEncoded, ProgressCallback};
 use serde::Deserialize;
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
@@ -15,29 +15,38 @@ pub struct UserResponseItem {
 impl APIClient {
     pub fn users_list(
         &self,
+        progress: ProgressCallback,
         callback: Callback<Result<Vec<UserResponseItem>, APIError>>,
     ) -> FetchTask {
-        self.get("users", vec![], callback)
+        self.get("users", vec![], Some(progress), callback)
     }
 
     pub fn users_create(
         &self,
         name: String,
         email: String,
+        progress: ProgressCallback,
         callback: Callback<Result<Vec<UserResponseItem>, APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
         body.insert("name", name);
         body.insert("email", email);
-        self.post("users", vec![], FormUrlEncoded(body), callback)
+        self.post(
+            "users",
+            vec![],
+            FormUrlEncoded(body),
+            Some(progress),
+            callback,
+        )
     }
 
     pub fn users_get(
         &self,
         id: i32,
+        progress: Option<ProgressCallback>,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
-        self.get(&format!("users/{}", id), vec![], callback)
+        self.get(&format!("users/{}", id), vec![], progress, callback)
     }
 
     pub fn users_update(
@@ -45,6 +54,7 @@ impl APIClient {
         id: i32,
         name: String,
         email: String,
+        progress: ProgressCallback,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
@@ -54,6 +64,7 @@ impl APIClient {
             &format!("users/{}", id),
             vec![],
             FormUrlEncoded(body),
+            Some(progress),
             callback,
         )
     }
@@ -61,8 +72,9 @@ impl APIClient {
     pub fn users_delete(
         &self,
         id: i32,
+        progress: ProgressCallback,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
-        self.delete(&format!("users/{}", id), vec![], callback)
+        self.delete(&format!("users/{}", id), vec![], Some(progress), callback)
     }
 }

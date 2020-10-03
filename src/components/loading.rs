@@ -16,6 +16,21 @@ pub struct LoadingProps {
     pub text: Option<String>,
 }
 
+impl LoadingProps {
+    pub fn disabled() -> LoadingProps {
+        LoadingProps {
+            active: false,
+            text: None,
+        }
+    }
+    pub fn enabled(x: Option<&str>) -> LoadingProps {
+        LoadingProps {
+            active: true,
+            text: x.map(|x| x.to_string()),
+        }
+    }
+}
+
 pub enum Msg {
     Update,
 }

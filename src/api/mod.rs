@@ -1,4 +1,5 @@
 use crate::api::error::resolve;
+use crate::components::loading::LoadingProps;
 use headers::authorization::Basic;
 use headers::{Authorization, ContentType, HeaderMapExt};
 use http::{Method, Request, Response};
@@ -19,6 +20,8 @@ pub struct APIClient {
     base_url: Url,
     auth_header: Option<Authorization<Basic>>,
 }
+
+pub type ProgressCallback = Callback<LoadingProps>;
 
 impl APIClient {
     pub fn new(base_url: &str) -> Self {
@@ -46,12 +49,17 @@ impl APIClient {
         query: Vec<(String, String)>,
         method: Method,
         body: B,
+        progress: Option<Callback<LoadingProps>>,
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
         B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
+        match &progress {
+            None => {}
+            Some(p) => p.emit(LoadingProps::enabled(None)),
+        }
         let mut url = self.base_url.join(path).unwrap();
         url.query_pairs_mut().extend_pairs(query);
         let mut builder = Request::builder().method(method).uri(url.as_str());
@@ -63,7 +71,13 @@ impl APIClient {
             Some(a) => builder.headers_mut().unwrap().typed_insert(a.clone()),
             None => {}
         }
-        let handler = move |response: Response<Text>| callback.emit(resolve(response));
+        let handler = move |response: Response<Text>| {
+            match progress.as_ref() {
+                None => {}
+                Some(p) => p.emit(LoadingProps::disabled()),
+            }
+            callback.emit(resolve(response));
+        };
         FetchService::fetch(builder.body(Ok(body.to_string())).unwrap(), handler.into()).unwrap()
     }
 
@@ -72,12 +86,13 @@ impl APIClient {
         &self,
         path: &str,
         query: Vec<(String, String)>,
+        progress: Option<ProgressCallback>,
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static,
     {
-        self.request(path, query, Method::GET, Empty, callback)
+        self.request(path, query, Method::GET, Empty, progress, callback)
     }
 
     #[inline]
@@ -86,13 +101,14 @@ impl APIClient {
         path: &str,
         query: Vec<(String, String)>,
         body: B,
+        progress: Option<ProgressCallback>,
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
         B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
-        self.request(path, query, Method::POST, body, callback)
+        self.request(path, query, Method::POST, body, progress, callback)
     }
 
     #[inline]
@@ -101,13 +117,14 @@ impl APIClient {
         path: &str,
         query: Vec<(String, String)>,
         body: B,
+        progress: Option<ProgressCallback>,
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
         B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
-        self.request(path, query, Method::PUT, body, callback)
+        self.request(path, query, Method::PUT, body, progress, callback)
     }
 
     #[inline]
@@ -115,12 +132,13 @@ impl APIClient {
         &self,
         path: &str,
         query: Vec<(String, String)>,
+        progress: Option<ProgressCallback>,
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static,
     {
-        self.request(path, query, Method::DELETE, Empty, callback)
+        self.request(path, query, Method::DELETE, Empty, progress, callback)
     }
 }
 

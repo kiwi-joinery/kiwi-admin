@@ -25,7 +25,7 @@ pub enum AppMessage {
     ChangeRoute(Route),
     LoggedIn(LoginResponse),
     Logout,
-    UpdatedLoading(LoadingProps),
+    GlobalLoader(LoadingProps),
 }
 
 impl Component for App {
@@ -61,7 +61,7 @@ impl Component for App {
                 PersistedAuth::remove();
                 self.client.remove_auth_header();
             }
-            AppMessage::UpdatedLoading(p) => {
+            AppMessage::GlobalLoader(p) => {
                 self.loading = p;
             }
         }
@@ -74,7 +74,6 @@ impl Component for App {
 
     fn view(&self) -> Html {
         let loading = self.loading.clone();
-        let c = self.link.callback(|c: AppMessage| c);
         html! {
             <>
                 //<Header current_user=&self.current_user/>
@@ -82,7 +81,7 @@ impl Component for App {
                 {
                     // Routes to render sub components
                     match &self.current_route {
-                        AppRoute::Login => html!{<Login callback=c client=self.client.clone() />},
+                        AppRoute::Login => html!{<Login app=self.link.clone() client=self.client.clone() />},
                         // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
