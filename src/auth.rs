@@ -31,7 +31,7 @@ impl PersistedAuth {
 
     pub fn persist(user_id: i32, token: String) -> PersistedAuth {
         let x = Self { user_id, token };
-        //storage().store::<Text>(KEY, Json(&x).into());
+        storage().store::<Text>(KEY, Json(&x).into());
         x
     }
 

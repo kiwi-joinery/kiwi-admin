@@ -19,7 +19,7 @@ struct LoginForm {
     password: String,
 }
 
-pub struct Login {
+pub struct LoginRoute {
     props: Props,
     link: ComponentLink<Self>,
     form: LoginForm,
@@ -38,12 +38,12 @@ pub enum Msg {
     Response(Result<LoginResponse, APIError>),
 }
 
-impl Component for Login {
+impl Component for LoginRoute {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Login {
+        LoginRoute {
             props,
             link,
             form: Default::default(),
@@ -94,7 +94,6 @@ impl Component for Login {
             let fd = FormData::new_with_form(&f).unwrap();
             Msg::Submit(fd)
         });
-
         html! {
             <div class="container">
                 <div class="row">
@@ -127,9 +126,9 @@ impl Component for Login {
                                 </p>
                                 <ErrorAlert error=&self.error />
                                 <button
-                                    class="btn btn-lg btn-primary pull-xs-right"
+                                    class="btn btn-lg btn-primary"
                                     type="submit"
-                                    disabled=false>
+                                    disabled=self.task.is_some()>
                                     { "Sign in" }
                                 </button>
                             </fieldset>

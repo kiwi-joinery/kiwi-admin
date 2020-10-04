@@ -1,8 +1,9 @@
 use crate::api::session::LoginResponse;
 use crate::api::APIClient;
 use crate::auth::PersistedAuth;
+use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
-use crate::routes::login::Login;
+use crate::routes::login::LoginRoute;
 use crate::routes::AppRoute;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -76,12 +77,12 @@ impl Component for App {
         let loading = self.loading.clone();
         html! {
             <>
-                //<Header current_user=&self.current_user/>
+                <HeaderComponent signed_in=self.client.has_auth_header() logout=self.link.callback(|_| AppMessage::Logout)/>
                 <LoadingComponent with loading/>
                 {
                     // Routes to render sub components
                     match &self.current_route {
-                        AppRoute::Login => html!{<Login app=self.link.clone() client=self.client.clone() />},
+                        AppRoute::Login => html!{<LoginRoute app=self.link.clone() client=self.client.clone() />},
                         // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},

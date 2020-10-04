@@ -1,0 +1,39 @@
+.navbar {
+    position:relative;
+    padding:.5rem 1rem;
+    background: #008f53;
+}
+.navbar::after {
+    content:"";
+    display:table;
+    clear:both;
+}
+
+.navbar-brand {
+    font-family:titillium web,sans-serif;
+    font-size:1.5rem!important;
+    padding-top:0!important;
+    margin-right:2rem!important;
+    color:#fff!important;
+}
+
+.navbar-nav .nav-link {
+    display:block;
+    padding-top:.425rem;
+    padding-bottom:.425rem
+}
+
+.nav {
+    padding-left:0;
+    margin-bottom:0;
+    list-style:none;
+}
+
+.nav-link {
+    display:inline-block;
+    color: #fff;
+}
+
+.nav-text {
+    margin-bottom:0!important;
+}
