@@ -1,4 +1,5 @@
 use crate::api::session::LoginResponse;
+use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
 use crate::auth::PersistedAuth;
 use crate::components::header::HeaderComponent;
@@ -22,7 +23,7 @@ pub struct App {
     loading: LoadingProps,
 }
 
-pub enum AppMessage {
+pub enum Msg {
     ChangeRoute(Route),
     LoggedIn(LoginResponse),
     Logout,
@@ -30,11 +31,11 @@ pub enum AppMessage {
 }
 
 impl Component for App {
-    type Message = AppMessage;
+    type Message = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let router_agent = RouteAgent::bridge(link.callback(AppMessage::ChangeRoute));
+        let router_agent = RouteAgent::bridge(link.callback(Msg::ChangeRoute));
         let route: Route = RouteService::new().get_route();
         let mut client = APIClient::new(API_URL);
         PersistedAuth::load().map(|a| {
@@ -51,18 +52,18 @@ impl Component for App {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            AppMessage::ChangeRoute(r) => {
+            Msg::ChangeRoute(r) => {
                 self.current_route = AppRoute::switch(r).unwrap();
             }
-            AppMessage::LoggedIn(r) => {
+            Msg::LoggedIn(r) => {
                 let auth = PersistedAuth::persist(r.user.id, r.token);
                 self.client.add_auth_header(auth.into());
             }
-            AppMessage::Logout => {
+            Msg::Logout => {
                 PersistedAuth::remove();
                 self.client.remove_auth_header();
             }
-            AppMessage::GlobalLoader(p) => {
+            Msg::GlobalLoader(p) => {
                 self.loading = p;
             }
         }
@@ -74,15 +75,24 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        let loading = self.loading.clone();
+        let loading_props = self.loading.clone();
+        let loading_callback = self.link.callback(|x| Msg::GlobalLoader(x));
         html! {
             <>
-                <HeaderComponent signed_in=self.client.has_auth_header() logout=self.link.callback(|_| AppMessage::Logout)/>
-                <LoadingComponent with loading/>
+                <HeaderComponent
+                    signed_in=self.client.has_auth_header()
+                    user=Option::<UserResponseItem>::None
+                    logout=self.link.callback(|_| Msg::Logout)
+                />
+                <LoadingComponent with loading_props/>
                 {
                     // Routes to render sub components
                     match &self.current_route {
-                        AppRoute::Login => html!{<LoginRoute app=self.link.clone() client=self.client.clone() />},
+                        AppRoute::Login => html!{<LoginRoute
+                            loading=loading_callback
+                            login=self.link.callback(|x| Msg::LoggedIn(x))
+                            client=self.client.clone()
+                        />},
                         // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
 use yew::Callback;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct LoginResponse {
     pub token: String,
     pub user: UserResponseItem,

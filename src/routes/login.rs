@@ -1,13 +1,13 @@
 use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
 use crate::api::APIClient;
-use crate::app::{App, AppMessage};
 use crate::components::error::ErrorAlert;
+use crate::components::loading::LoadingProps;
 use crate::routes::AppRoute;
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
 use yew::services::fetch::FetchTask;
-use yew::{html, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
+use yew::{html, Callback, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
 use yew_router::prelude::*;
 
 const FIELD_EMAIL: &str = "email";
@@ -27,10 +27,11 @@ pub struct LoginRoute {
     error: Option<APIError>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub client: APIClient,
-    pub app: ComponentLink<App>,
+    pub login: Callback<LoginResponse>,
+    pub loading: Callback<LoadingProps>,
 }
 
 pub enum Msg {
@@ -62,7 +63,7 @@ impl Component for LoginRoute {
                     self.task = Some(self.props.client.session_login(
                         self.form.email.clone(),
                         self.form.password.clone(),
-                        self.props.app.callback(AppMessage::GlobalLoader),
+                        self.props.loading.clone(),
                         self.link.callback(Msg::Response),
                     ));
                 }
@@ -71,7 +72,7 @@ impl Component for LoginRoute {
                 self.task = None;
                 match r {
                     Ok(s) => {
-                        self.props.app.send_message(AppMessage::LoggedIn(s));
+                        self.props.login.emit(s);
                     }
                     Err(e) => {
                         self.error = Some(e);
@@ -83,8 +84,12 @@ impl Component for LoginRoute {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props != props {
+            self.props = props;
+            true
+        } else {
+            false
+        }
     }
 
     fn view(&self) -> Html {

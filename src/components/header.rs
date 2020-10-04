@@ -1,3 +1,4 @@
+use crate::api::users::UserResponseItem;
 use crate::routes::AppRoute;
 use yew::{html, Callback, Component, ComponentLink, Html, MouseEvent, Properties, ShouldRender};
 use yew_router::prelude::*;
@@ -10,6 +11,7 @@ pub struct HeaderComponent {
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub signed_in: bool,
+    pub user: Option<UserResponseItem>,
     pub logout: Callback<()>,
 }
 
@@ -43,6 +45,12 @@ impl Component for HeaderComponent {
 
     fn view(&self) -> Html {
         let logout = self.link.callback(|_: MouseEvent| Msg::Logout);
+        let name = self
+            .props
+            .user
+            .as_ref()
+            .map(|x| format!("Welcome {}", x.name))
+            .unwrap_or("Loading...".to_string());
         html! {
             <nav class="navbar navbar-light">
                 <div class="container">
@@ -54,7 +62,7 @@ impl Component for HeaderComponent {
                             html!{
                                 <ul class="nav">
                                     <li class="nav-item">
-                                        <p class="nav-link nav-text">{"User name"}</p>
+                                        <p class="nav-link nav-text">{name}</p>
                                     </li>
                                     <li class="nav-item">
                                         <button onclick=logout class="btn btn-light">{"Logout"}</button>
