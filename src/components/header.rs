@@ -1,22 +1,30 @@
+use crate::api::error::APIError;
 use crate::api::users::UserResponseItem;
+use crate::api::APIClient;
+use crate::components::loading::LoadingProps;
 use crate::routes::AppRoute;
+use yew::services::fetch::FetchTask;
 use yew::{html, Callback, Component, ComponentLink, Html, MouseEvent, Properties, ShouldRender};
 use yew_router::prelude::*;
 
 pub struct HeaderComponent {
     props: Props,
     link: ComponentLink<Self>,
+    logout_task: Option<FetchTask>,
 }
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
-    pub signed_in: bool,
-    pub user: Option<UserResponseItem>,
-    pub logout: Callback<()>,
+    pub is_signed_in: bool,
+    pub current_user: Option<UserResponseItem>,
+    pub on_logout: Callback<()>,
+    pub on_loading: Callback<LoadingProps>,
+    pub api_client: APIClient,
 }
 
 pub enum Msg {
     Logout,
+    LogoutResult(Result<(), APIError>),
 }
 
 impl Component for HeaderComponent {
@@ -24,12 +32,24 @@ impl Component for HeaderComponent {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        HeaderComponent { props, link }
+        HeaderComponent {
+            props,
+            link,
+            logout_task: None,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Logout => self.props.logout.emit(()),
+            Msg::Logout => {
+                self.logout_task = Some(self.props.api_client.session_logout(
+                    self.props.on_loading.clone(),
+                    self.link.callback(Msg::LogoutResult),
+                ))
+            }
+            Msg::LogoutResult(_) => {
+                self.props.on_logout.emit(());
+            }
         }
         false
     }
@@ -47,7 +67,7 @@ impl Component for HeaderComponent {
         let logout = self.link.callback(|_: MouseEvent| Msg::Logout);
         let name = self
             .props
-            .user
+            .current_user
             .as_ref()
             .map(|x| format!("Welcome {}", x.name))
             .unwrap_or("Loading...".to_string());
@@ -58,7 +78,7 @@ impl Component for HeaderComponent {
                         { "Kiwi Admin" }
                     </RouterAnchor<AppRoute>>
                     {
-                        if self.props.signed_in {
+                        if self.props.is_signed_in {
                             html!{
                                 <ul class="nav">
                                     <li class="nav-item">

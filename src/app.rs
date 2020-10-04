@@ -19,8 +19,9 @@ pub struct App {
     current_route: AppRoute,
     #[allow(unused)] // A component that owns this can send and receive messages from the agent.
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    client: APIClient,
+    api_client: APIClient,
     loading: LoadingProps,
+    current_user: Option<UserResponseItem>,
 }
 
 pub enum Msg {
@@ -45,8 +46,9 @@ impl Component for App {
             link,
             current_route: AppRoute::switch(route).unwrap(),
             router_agent,
-            client,
+            api_client: client,
             loading: LoadingProps::default(),
+            current_user: None,
         }
     }
 
@@ -57,11 +59,11 @@ impl Component for App {
             }
             Msg::LoggedIn(r) => {
                 let auth = PersistedAuth::persist(r.user.id, r.token);
-                self.client.add_auth_header(auth.into());
+                self.api_client.add_auth_header(auth.into());
             }
             Msg::Logout => {
                 PersistedAuth::remove();
-                self.client.remove_auth_header();
+                self.api_client.remove_auth_header();
             }
             Msg::GlobalLoader(p) => {
                 self.loading = p;
@@ -76,24 +78,25 @@ impl Component for App {
 
     fn view(&self) -> Html {
         let loading_props = self.loading.clone();
-        let loading_callback = self.link.callback(|x| Msg::GlobalLoader(x));
+        let on_loading = self.link.callback(|x| Msg::GlobalLoader(x));
         html! {
             <>
                 <HeaderComponent
-                    signed_in=self.client.has_auth_header()
-                    user=Option::<UserResponseItem>::None
-                    logout=self.link.callback(|_| Msg::Logout)
+                    on_loading=on_loading.clone()
+                    is_signed_in=self.api_client.has_auth_header()
+                    current_user=self.current_user.clone()
+                    on_logout=self.link.callback(|_| Msg::Logout)
+                    api_client=self.api_client.clone()
                 />
                 <LoadingComponent with loading_props/>
                 {
                     // Routes to render sub components
                     match &self.current_route {
                         AppRoute::Login => html!{<LoginRoute
-                            loading=loading_callback
-                            login=self.link.callback(|x| Msg::LoggedIn(x))
-                            client=self.client.clone()
+                            on_loading=on_loading
+                            on_login=self.link.callback(|x| Msg::LoggedIn(x))
+                            api_client=self.api_client.clone()
                         />},
-                        // AppRoute::Register => html!{<Register callback=callback_register />},
                         AppRoute::Dashboard => html!{ {"Dashboard"} },
                         // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
                         // AppRoute::EditorCreate => html!{<Editor />},

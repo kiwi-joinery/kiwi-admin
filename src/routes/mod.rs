@@ -1,5 +1,6 @@
 pub mod login;
 
+use serde::{Deserialize, Serialize};
 use yew_router::prelude::*;
 
 #[derive(Switch, Debug, Clone)]
@@ -21,3 +22,6 @@ pub enum AppRoute {
     #[to = "/"]
     Dashboard,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct AppRouteState {}

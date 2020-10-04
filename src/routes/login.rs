@@ -29,9 +29,9 @@ pub struct LoginRoute {
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
-    pub client: APIClient,
-    pub login: Callback<LoginResponse>,
-    pub loading: Callback<LoadingProps>,
+    pub api_client: APIClient,
+    pub on_login: Callback<LoginResponse>,
+    pub on_loading: Callback<LoadingProps>,
 }
 
 pub enum Msg {
@@ -60,10 +60,10 @@ impl Component for LoginRoute {
                 self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
                 if self.task.is_none() {
                     self.error = None;
-                    self.task = Some(self.props.client.session_login(
+                    self.task = Some(self.props.api_client.session_login(
                         self.form.email.clone(),
                         self.form.password.clone(),
-                        self.props.loading.clone(),
+                        self.props.on_loading.clone(),
                         self.link.callback(Msg::Response),
                     ));
                 }
@@ -72,7 +72,7 @@ impl Component for LoginRoute {
                 self.task = None;
                 match r {
                     Ok(s) => {
-                        self.props.login.emit(s);
+                        self.props.on_login.emit(s);
                     }
                     Err(e) => {
                         self.error = Some(e);
