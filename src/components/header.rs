@@ -2,10 +2,9 @@ use crate::api::error::APIError;
 use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
 use crate::components::loading::LoadingProps;
-use crate::routes::AppRoute;
+use crate::routes::{AppAnchor, AppRoute};
 use yew::services::fetch::FetchTask;
 use yew::{html, Callback, Component, ComponentLink, Html, MouseEvent, Properties, ShouldRender};
-use yew_router::prelude::*;
 
 pub struct HeaderComponent {
     props: Props,
@@ -74,9 +73,9 @@ impl Component for HeaderComponent {
         html! {
             <nav class="navbar navbar-light">
                 <div class="container">
-                    <RouterAnchor<AppRoute> route=AppRoute::Dashboard classes="navbar-brand">
+                    <AppAnchor route=AppRoute::Dashboard classes="navbar-brand">
                         { "Kiwi Admin" }
-                    </RouterAnchor<AppRoute>>
+                    </AppAnchor>
                     {
                         if self.props.is_signed_in {
                             html!{

@@ -1,6 +1,5 @@
 pub mod login;
 
-use serde::{Deserialize, Serialize};
 use yew_router::prelude::*;
 
 #[derive(Switch, Debug, Clone)]
@@ -23,5 +22,5 @@ pub enum AppRoute {
     Dashboard,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct AppRouteState {}
+pub type AppRouter = Router<AppRoute>;
+pub type AppAnchor = RouterAnchor<AppRoute>;
