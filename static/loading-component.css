@@ -1,9 +1,9 @@
-@-webkit-keyframes spin_loader_ajax_small {
+@-webkit-keyframes loading-component-spin-ajax-small {
     0% { -webkit-transform: rotate(0deg); }
     100% { -webkit-transform: rotate(360deg); }
 }
 
-@keyframes spin_loader_ajax_small {
+@keyframes loading-component-spin-ajax-small {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
@@ -19,9 +19,9 @@
     background-color: rgba(0,0,0,0.5);
 }
 
-#loading-component .spinner {
-    -webkit-animation: spin_loader_ajax_small 1s linear infinite;
-    animation: spin_loader_ajax_small 1s linear infinite;
+#loading-component-spinner {
+    -webkit-animation: loading-component-spin-ajax-small 1s linear infinite;
+    animation: loading-component-spin-ajax-small 1s linear infinite;
     border: 2px solid #2D2D2D !important;
     border-top: 2px solid #f3f3f3 !important;
     border-radius: 50%;

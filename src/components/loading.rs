@@ -86,7 +86,7 @@ impl Component for LoadingComponent {
                 if self.delayed_active {
                     html!{
                         <div id="loading-component">
-                            <div class="spinner"></div>
+                            <div id="loading-component-spinner"></div>
                             {
                                 match &self.props.text {
                                     Some(t) => html!{<p>{t}</p>},
