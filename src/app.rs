@@ -2,6 +2,7 @@ use crate::api::session::LoginResponse;
 use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
 use crate::auth::PersistedAuth;
+use crate::components::footer::Footer;
 use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::routes::login::LoginRoute;
@@ -96,7 +97,7 @@ impl Component for App {
                         })
                     />
                 </div>
-                //<Footer />
+                <Footer />
             </>
         }
     }
