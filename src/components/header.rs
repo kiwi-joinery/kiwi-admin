@@ -81,7 +81,7 @@ impl Component for HeaderComponent {
                             html!{
                                 <ul class="nav">
                                     <li class="nav-item">
-                                        <p class="nav-link nav-text">{name}</p>
+                                        <p class="nav-text">{name}</p>
                                     </li>
                                     <li class="nav-item">
                                         <button onclick=logout class="btn btn-light">{"Logout"}</button>
