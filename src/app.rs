@@ -1,3 +1,4 @@
+use crate::api::error::APIError;
 use crate::api::session::LoginResponse;
 use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
@@ -8,6 +9,7 @@ use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::routes::login::LoginRoute;
 use crate::routes::{AppRoute, AppRouter};
 use yew::prelude::*;
+use yew::services::fetch::FetchTask;
 use yew_router::prelude::*;
 
 #[cfg(debug_assertions)]
@@ -20,12 +22,14 @@ pub struct App {
     api_client: APIClient,
     loading: LoadingProps,
     current_user: Option<UserResponseItem>,
+    current_user_task: Option<FetchTask>,
 }
 
 pub enum Msg {
     LoggedIn(LoginResponse),
     Logout,
     GlobalLoader(LoadingProps),
+    UserResponse(Result<UserResponseItem, APIError>),
 }
 
 impl Component for App {
@@ -34,14 +38,17 @@ impl Component for App {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let mut client = APIClient::new(API_URL);
-        PersistedAuth::load().map(|a| {
-            client.add_auth_header(a.into());
-        });
+        let auth = PersistedAuth::load();
+        match auth {
+            None => {}
+            Some(a) => client.set_auth_header(a.into()),
+        }
         Self {
             link,
             api_client: client,
             loading: LoadingProps::default(),
             current_user: None,
+            current_user_task: None,
         }
     }
 
@@ -49,15 +56,22 @@ impl Component for App {
         match msg {
             Msg::LoggedIn(r) => {
                 let auth = PersistedAuth::persist(r.user.id, r.token);
-                self.api_client.add_auth_header(auth.into());
+                self.api_client.set_auth_header(auth.into());
+                self.current_user_task = Some(self.load_user_task(r.user.id));
             }
             Msg::Logout => {
+                self.current_user_task = None;
+                self.current_user = None;
                 PersistedAuth::remove();
                 self.api_client.remove_auth_header();
             }
             Msg::GlobalLoader(p) => {
                 self.loading = p;
             }
+            Msg::UserResponse(res) => match res {
+                Ok(u) => self.current_user = Some(u),
+                Err(e) => log::error!("Couldn't load the current user: {}", e),
+            },
         }
         true
     }
@@ -75,7 +89,7 @@ impl Component for App {
             <>
                 <HeaderComponent
                     on_loading=on_loading.clone()
-                    is_signed_in=self.api_client.has_auth_header()
+                    is_signed_in=self.api_client.auth_header().is_some()
                     current_user=self.current_user.clone()
                     on_logout=self.link.callback(|_| Msg::Logout)
                     api_client=self.api_client.clone()
@@ -100,5 +114,24 @@ impl Component for App {
                 <Footer />
             </>
         }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            match self.api_client.auth_header() {
+                None => {}
+                Some(a) => {
+                    self.current_user_task =
+                        Some(self.load_user_task(a.0.username().parse().unwrap()))
+                }
+            }
+        }
+    }
+}
+
+impl App {
+    fn load_user_task(&self, id: i32) -> FetchTask {
+        self.api_client
+            .users_get(id, None, self.link.callback(Msg::UserResponse))
     }
 }

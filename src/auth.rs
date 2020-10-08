@@ -5,7 +5,7 @@ use yew::format::{Json, Text};
 use yew::services::storage::Area;
 use yew::services::StorageService;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PersistedAuth {
     pub user_id: i32,
     token: String,

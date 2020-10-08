@@ -68,8 +68,8 @@ impl Component for HeaderComponent {
             .props
             .current_user
             .as_ref()
-            .map(|x| format!("Welcome {}", x.name))
-            .unwrap_or("Loading...".to_string());
+            .map(|x| x.name.as_str())
+            .unwrap_or("Loading...");
         html! {
             <nav class="navbar navbar-light">
                 <div class="container">

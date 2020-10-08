@@ -6,7 +6,7 @@ use http::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use url::Url;
-use yew::format::Text;
+use yew::format::{Nothing, Text};
 use yew::services::fetch::{FetchService, FetchTask};
 use yew::Callback;
 
@@ -31,11 +31,11 @@ impl APIClient {
         }
     }
 
-    pub fn has_auth_header(&self) -> bool {
-        self.auth_header.is_some()
+    pub fn auth_header(&self) -> &Option<Authorization<Basic>> {
+        &self.auth_header
     }
 
-    pub fn add_auth_header(&mut self, a: Authorization<Basic>) {
+    pub fn set_auth_header(&mut self, a: Authorization<Basic>) {
         self.auth_header = Some(a)
     }
 
@@ -78,7 +78,7 @@ impl APIClient {
             }
             callback.emit(resolve(response));
         };
-        FetchService::fetch(builder.body(Ok(body.to_string())).unwrap(), handler.into()).unwrap()
+        FetchService::fetch(builder.body(body).unwrap(), handler.into()).unwrap()
     }
 
     #[inline]
@@ -142,9 +142,8 @@ impl APIClient {
     }
 }
 
-pub trait TextBody {
+pub trait TextBody: Into<Text> {
     fn content_type() -> Option<ContentType>;
-    fn to_string(&self) -> String;
 }
 
 pub struct Empty;
@@ -153,18 +152,24 @@ impl TextBody for Empty {
     fn content_type() -> Option<ContentType> {
         None
     }
-    fn to_string(&self) -> String {
-        String::new()
+}
+
+impl Into<Text> for Empty {
+    fn into(self) -> Text {
+        Nothing.into()
     }
 }
 
-pub struct FormUrlEncoded<T: Serialize>(T);
+pub struct FormUrlEncoded<T>(T);
 
 impl<T: Serialize> TextBody for FormUrlEncoded<T> {
     fn content_type() -> Option<ContentType> {
         Some(ContentType::form_url_encoded())
     }
-    fn to_string(&self) -> String {
-        serde_urlencoded::to_string(&self.0).unwrap()
+}
+
+impl<T: Serialize> Into<Text> for FormUrlEncoded<T> {
+    fn into(self) -> Text {
+        Ok(serde_urlencoded::to_string(self.0).unwrap())
     }
 }
