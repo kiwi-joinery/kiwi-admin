@@ -1,8 +1,11 @@
 pub mod login;
 
+use serde::{Deserialize, Serialize};
+use yew_router::agent::RouteRequest;
 use yew_router::prelude::*;
+use yew_router::switch::Permissive;
 
-#[derive(Switch, Debug, Clone)]
+#[derive(Switch, Debug, Clone, PartialEq)]
 pub enum AppRoute {
     #[to = "/login"]
     Login,
@@ -16,11 +19,67 @@ pub enum AppRoute {
     GalleryCreate,
     #[to = "/users"]
     Users,
-    #[to = "/users/@{id}"]
+    #[to = "/users/{id}"]
     User(i64),
-    #[to = "/"]
+    #[to = "/!"]
     Dashboard,
+    #[to = "/{}"]
+    NotFound(Permissive<String>),
 }
 
-pub type AppRouter = Router<AppRoute>;
-pub type AppAnchor = RouterAnchor<AppRoute>;
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
+pub struct HistoryState {
+    pub redirect_on_login: Option<String>,
+    pub ignore_change: bool,
+}
+
+impl AppRoute {
+    pub fn requires_auth(&self) -> bool {
+        match &self {
+            AppRoute::Login => false,
+            AppRoute::ForgotPassword => false,
+            AppRoute::ResetPassword => false,
+            AppRoute::Gallery => true,
+            AppRoute::GalleryCreate => true,
+            AppRoute::Users => true,
+            AppRoute::User(_) => true,
+            AppRoute::Dashboard => true,
+            AppRoute::NotFound(_) => false,
+        }
+    }
+}
+
+pub fn on_route_change(new_route: Route, is_authenticated: bool) {
+    match AppRoute::switch(new_route.clone()) {
+        None => {}
+        Some(a) => {
+            let mut dispatch = RouteAgentDispatcher::new();
+            if a.requires_auth() && !is_authenticated {
+                let mut redirect = Route::from(AppRoute::Login);
+                redirect.state.redirect_on_login = Some(new_route.route);
+                dispatch.send(RouteRequest::ReplaceRoute(redirect))
+            } else if a == AppRoute::Login && is_authenticated {
+                let redirect = Route::from(AppRoute::Dashboard);
+                dispatch.send(RouteRequest::ReplaceRoute(redirect))
+            }
+        }
+    }
+}
+
+pub type State = HistoryState;
+#[allow(dead_code)]
+pub type Route = yew_router::route::Route<State>;
+#[allow(dead_code)]
+pub type RouteService = yew_router::service::RouteService<State>;
+#[allow(dead_code)]
+pub type RouteAgent = yew_router::agent::RouteAgent<State>;
+#[allow(dead_code)]
+pub type RouteAgentBridge = yew_router::agent::RouteAgentBridge<State>;
+#[allow(dead_code)]
+pub type RouteAgentDispatcher = yew_router::agent::RouteAgentDispatcher<State>;
+#[allow(dead_code)]
+pub type RouterAnchor = yew_router::components::RouterAnchor<AppRoute, State>;
+#[allow(dead_code)]
+pub type RouterButton = yew_router::components::RouterButton<AppRoute, State>;
+#[allow(dead_code)]
+pub type Router = yew_router::router::Router<AppRoute, State>;

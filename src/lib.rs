@@ -15,8 +15,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen(start)]
 pub fn run_app() {
-    #[cfg(feature = "console_error_panic_hook")]
-    console_error_panic_hook::set_once();
     wasm_logger::init(wasm_logger::Config::default());
+    log::info!("Starting app");
     yew::start_app::<App>();
 }

@@ -3,12 +3,11 @@ use crate::api::session::LoginResponse;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
-use crate::routes::AppRoute;
+use crate::routes::{AppRoute, RouterAnchor};
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
 use yew::services::fetch::FetchTask;
 use yew::{html, Callback, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
-use yew_router::prelude::*;
 
 const FIELD_EMAIL: &str = "email";
 const FIELD_PASSWORD: &str = "password";
@@ -125,9 +124,9 @@ impl Component for LoginRoute {
                                         />
                                 </fieldset>
                                 <p class="text-xs-center">
-                                    <RouterAnchor<AppRoute> route=AppRoute::ForgotPassword>
+                                    <RouterAnchor route=AppRoute::ForgotPassword>
                                         { "Forgot Password?" }
-                                    </RouterAnchor<AppRoute>>
+                                    </RouterAnchor>
                                 </p>
                                 <ErrorAlert error=&self.error />
                                 <button
