@@ -30,7 +30,6 @@ pub enum AppRoute {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
 pub struct HistoryState {
     pub redirect_on_login: Option<String>,
-    pub ignore_change: bool,
 }
 
 impl AppRoute {
@@ -39,12 +38,16 @@ impl AppRoute {
             AppRoute::Login => false,
             AppRoute::ForgotPassword => false,
             AppRoute::ResetPassword => false,
-            AppRoute::Gallery => true,
-            AppRoute::GalleryCreate => true,
-            AppRoute::Users => true,
-            AppRoute::User(_) => true,
-            AppRoute::Dashboard => true,
             AppRoute::NotFound(_) => false,
+            _ => true,
+        }
+    }
+    pub fn redirect_if_logged_in(&self) -> bool {
+        match &self {
+            AppRoute::Login => true,
+            AppRoute::ForgotPassword => true,
+            AppRoute::ResetPassword => true,
+            _ => false,
         }
     }
 }
@@ -58,7 +61,7 @@ pub fn on_route_change(new_route: Route, is_authenticated: bool) {
                 let mut redirect = Route::from(AppRoute::Login);
                 redirect.state.redirect_on_login = Some(new_route.route);
                 dispatch.send(RouteRequest::ReplaceRoute(redirect))
-            } else if a == AppRoute::Login && is_authenticated {
+            } else if a.redirect_if_logged_in() && is_authenticated {
                 let redirect = Route::from(AppRoute::Dashboard);
                 dispatch.send(RouteRequest::ReplaceRoute(redirect))
             }
