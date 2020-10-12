@@ -6,8 +6,8 @@ use crate::components::loading::LoadingProps;
 use crate::routes::{AppRoute, RouterAnchor};
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
+use yew::prelude::*;
 use yew::services::fetch::FetchTask;
-use yew::{html, Callback, Component, ComponentLink, FocusEvent, Html, Properties, ShouldRender};
 
 const FIELD_EMAIL: &str = "email";
 const FIELD_PASSWORD: &str = "password";

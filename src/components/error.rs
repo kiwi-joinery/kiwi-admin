@@ -1,5 +1,5 @@
 use crate::api::error::APIError;
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::prelude::*;
 
 pub struct ErrorAlert {
     props: Props,

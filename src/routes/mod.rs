@@ -1,4 +1,5 @@
 pub mod login;
+pub mod not_found;
 
 use serde::{Deserialize, Serialize};
 use yew_router::agent::RouteRequest;

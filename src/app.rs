@@ -7,6 +7,7 @@ use crate::components::footer::Footer;
 use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::routes::login::LoginRoute;
+use crate::routes::not_found::NotFoundRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -123,7 +124,7 @@ impl Component for App {
                                     api_client=api_client.clone()
                                 />},
                                 AppRoute::Dashboard => html! { {"Dashboard"} },
-                                AppRoute::NotFound(_) => html! { {"Not found"} },
+                                AppRoute::NotFound(_) => html! { <NotFoundRoute/> },
                                 _ => html! {},
                             }
                         })

@@ -1,7 +1,7 @@
 use std::time::Duration;
+use yew::prelude::*;
 use yew::services::timeout::TimeoutTask;
 use yew::services::TimeoutService;
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 
 pub struct LoadingComponent {
     props: LoadingProps,

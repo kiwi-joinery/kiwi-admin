@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::prelude::*;
 
 pub struct Footer {}
 
