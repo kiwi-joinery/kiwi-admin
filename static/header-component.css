@@ -1,6 +1,7 @@
 .navbar {
     background: #008f53;
     height: 57px;
+    z-index: 1000;
 }
 
 .navbar-brand {

@@ -71,7 +71,7 @@ impl Component for HeaderComponent {
             .map(|x| x.name.as_str())
             .unwrap_or("Loading...");
         html! {
-            <nav class="navbar navbar-light fixed-top">
+            <nav class="navbar navbar-light">
                 <div class="container-fluid">
                     <RouterAnchor route=AppRoute::Dashboard classes="navbar-brand">
                         { "Kiwi Admin" }

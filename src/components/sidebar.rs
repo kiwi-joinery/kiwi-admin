@@ -66,7 +66,7 @@ impl Component for SidebarComponent {
                             </ul>
                         </div>
                     </nav>
-                    <main class="col-md-9 ml-sm-auto col-lg-10 px-4 sidebar-main">
+                    <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
                         {self.props.children.clone()}
                     </main>
                 </div>
