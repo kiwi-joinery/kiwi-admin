@@ -14,14 +14,18 @@ pub enum AppRoute {
     ForgotPassword,
     #[to = "/reset_password"]
     ResetPassword,
-    #[to = "/gallery"]
-    Gallery,
     #[to = "/gallery/create"]
     GalleryCreate,
+    #[to = "/gallery/{id}"]
+    GalleryEdit(u32),
+    #[to = "/gallery"]
+    Gallery,
+    #[to = "/users/create"]
+    UsersCreate,
+    #[to = "/users/{id}"]
+    UserEdit(u32),
     #[to = "/users"]
     Users,
-    #[to = "/users/{id}"]
-    User(i64),
     #[to = "/!"]
     Dashboard,
     #[to = "/{}"]

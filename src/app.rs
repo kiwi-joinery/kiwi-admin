@@ -6,6 +6,7 @@ use crate::auth::PersistedAuth;
 use crate::components::footer::Footer;
 use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
+use crate::components::sidebar::{SidebarActive, SidebarComponent};
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
@@ -114,22 +115,39 @@ impl Component for App {
                     api_client=api_client.clone()
                 />
                 <LoadingComponent with loading_props/>
-                <div>
-                    <Router
-                        render = Router::render(move |switch: AppRoute| {
-                            match switch {
-                                AppRoute::Login => html! {<LoginRoute
-                                    on_loading=on_loading.clone()
-                                    on_login=on_login.clone()
-                                    api_client=api_client.clone()
-                                />},
-                                AppRoute::Dashboard => html! { {"Dashboard"} },
-                                AppRoute::NotFound(_) => html! { <NotFoundRoute/> },
-                                _ => html! {},
-                            }
-                        })
-                    />
-                </div>
+                <Router
+                    render = Router::render(move |switch: AppRoute| {
+                        match switch {
+                            AppRoute::Login => html! {<LoginRoute
+                                on_loading=on_loading.clone()
+                                on_login=on_login.clone()
+                                api_client=api_client.clone()
+                            />},
+                            AppRoute::Dashboard => html! {
+                                <SidebarComponent active=SidebarActive::Dashboard>
+                                    <p>{"Dashboard"}</p>
+                                </SidebarComponent>
+                            },
+                            AppRoute::Users => html! {
+                                <SidebarComponent active=SidebarActive::Users>
+                                    <p>{"Users"}</p>
+                                </SidebarComponent>
+                            },
+                            AppRoute::Gallery => html! {
+                                <SidebarComponent active=SidebarActive::Gallery>
+                                    <p>{"Gallery"}</p>
+                                </SidebarComponent>
+                            },
+                            AppRoute::GalleryCreate => html! {
+                                <SidebarComponent>
+                                    <p>{"Gallery Create"}</p>
+                                </SidebarComponent>
+                            },
+                            AppRoute::NotFound(_) => html! { <NotFoundRoute/> },
+                            _ => html! {},
+                        }
+                    })
+                />
                 <Footer />
             </>
         }

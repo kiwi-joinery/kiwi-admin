@@ -18,9 +18,10 @@ impl Component for Footer {
         false
     }
 
+    // https://getbootstrap.com/docs/4.1/examples/sticky-footer/
     fn view(&self) -> Html {
         html! {
-            <footer>
+            <footer class="footer">
                 <div class="container">
                     <div class="row">
                         <div class="col">
