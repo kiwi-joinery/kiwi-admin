@@ -7,6 +7,7 @@ use crate::components::footer::Footer;
 use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::components::sidebar::{SidebarActive, SidebarComponent};
+use crate::routes::dashboard::DashboardRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
@@ -125,7 +126,7 @@ impl Component for App {
                             />},
                             AppRoute::Dashboard => html! {
                                 <SidebarComponent active=SidebarActive::Dashboard>
-                                    <p>{"Dashboard"}</p>
+                                    <DashboardRoute/>
                                 </SidebarComponent>
                             },
                             AppRoute::Users => html! {
