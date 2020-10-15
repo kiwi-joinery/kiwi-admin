@@ -8,6 +8,7 @@ use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::components::sidebar::{SidebarActive, SidebarComponent};
 use crate::routes::dashboard::DashboardRoute;
+use crate::routes::forgot_password::ForgotPasswordRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
@@ -143,6 +144,12 @@ impl Component for App {
                                 <SidebarComponent>
                                     <p>{"Gallery Create"}</p>
                                 </SidebarComponent>
+                            },
+                            AppRoute::ForgotPassword => html! {
+                                <ForgotPasswordRoute
+                                    on_loading=on_loading.clone()
+                                    api_client=api_client.clone()
+                                />
                             },
                             AppRoute::NotFound(_) => html! { <NotFoundRoute/> },
                             _ => html! {},

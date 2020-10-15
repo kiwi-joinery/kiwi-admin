@@ -26,11 +26,11 @@ impl Component for Footer {
                     <div class="row">
                         <div class="col">
                             { "© 2020 " }
-                            <a href="https://www.kiwijoinerydevon.co.uk"> { "Kiwi Joinery" } </a>
+                            <a target="_blank" href="https://www.kiwijoinerydevon.co.uk"> { "Kiwi Joinery" } </a>
                         </div>
                         <div class="col text-right">
                             { " Source code available on " }
-                            <a href="https://github.com/kiwi-joinery/kiwi-admin"> { "Github" } </a>
+                            <a target="_blank" href="https://github.com/kiwi-joinery/kiwi-admin"> { "Github" } </a>
                         </div>
                     </div>
                 </div>

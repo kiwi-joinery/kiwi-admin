@@ -12,6 +12,7 @@ use yew::Callback;
 
 pub mod error;
 pub mod gallery;
+pub mod password_reset;
 pub mod session;
 pub mod users;
 

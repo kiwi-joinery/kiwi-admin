@@ -28,10 +28,11 @@ impl std::error::Error for APIError {}
 impl Display for APIError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let m = match self {
-            APIError::BadRequest(d) => format!(
-                "Bad request: {}",
-                d.description.as_ref().unwrap_or(&"".to_string())
-            ),
+            APIError::BadRequest(d) => d
+                .description
+                .as_ref()
+                .unwrap_or(&"".to_string())
+                .to_string(),
             APIError::Unauthorized(d) => match d.code.as_str() {
                 "INCORRECT_CREDENTIALS" => "Incorrect username or password",
                 "MISSING_CREDENTIALS" => "Request missing username or password",

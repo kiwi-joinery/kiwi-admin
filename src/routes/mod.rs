@@ -1,4 +1,5 @@
 pub mod dashboard;
+pub mod forgot_password;
 pub mod login;
 pub mod not_found;
 
@@ -13,7 +14,7 @@ pub enum AppRoute {
     Login,
     #[to = "/forgot_password"]
     ForgotPassword,
-    #[to = "/reset_password"]
+    #[to = "/password_reset"]
     ResetPassword,
     #[to = "/gallery/create"]
     GalleryCreate,
