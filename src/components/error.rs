@@ -1,18 +1,18 @@
-use crate::api::error::APIError;
+use std::error::Error;
 use yew::prelude::*;
 
-pub struct ErrorAlert {
-    props: Props,
+pub struct ErrorAlert<T: Error + Clone + PartialEq> {
+    props: Props<T>,
 }
 
 #[derive(Properties, Clone, PartialEq)]
-pub struct Props {
-    pub error: Option<APIError>,
+pub struct Props<T: Error + Clone + PartialEq> {
+    pub error: Option<T>,
 }
 
-impl Component for ErrorAlert {
+impl<T: 'static + Error + Clone + PartialEq> Component for ErrorAlert<T> {
     type Message = ();
-    type Properties = Props;
+    type Properties = Props<T>;
 
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         ErrorAlert { props }

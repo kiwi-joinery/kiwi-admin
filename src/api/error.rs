@@ -34,7 +34,7 @@ impl Display for APIError {
                 .unwrap_or(&"".to_string())
                 .to_string(),
             APIError::Unauthorized(d) => match d.code.as_str() {
-                "INCORRECT_CREDENTIALS" => "Incorrect username or password",
+                "INCORRECT_CREDENTIALS" => "Incorrect credentials",
                 "MISSING_CREDENTIALS" => "Request missing username or password",
                 _ => "Unauthorized",
             }

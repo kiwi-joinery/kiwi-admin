@@ -128,7 +128,7 @@ impl ForgotPasswordRoute {
                             value=&self.email
                             />
                     </fieldset>
-                    <ErrorAlert error=&self.error />
+                    <ErrorAlert<APIError> error=&self.error />
                     <button
                         class="btn btn-lg btn-primary"
                         type="submit"

@@ -1,80 +1,122 @@
 use crate::api::error::APIError;
-use crate::api::session::LoginResponse;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
-use crate::routes::{AppRoute, RouterAnchor};
+use crate::routes::{AppRoute, Route, RouteAgentDispatcher, RouteService};
+use serde::Deserialize;
+use thiserror::Error;
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
+use yew_router::agent::RouteRequest;
 
-const FIELD_EMAIL: &str = "email";
-const FIELD_PASSWORD: &str = "password";
+const FIELD_PWD: &str = "password";
+const FIELD_PWD_REPEAT: &str = "repeat_password";
+
+#[derive(Debug, Clone, PartialEq, Error)]
+enum Error {
+    #[error("{0}")]
+    APIError(APIError),
+    #[error("Passwords do not match")]
+    PasswordsDoNotMatch,
+}
+
+#[derive(Deserialize, Default)]
+struct Query {
+    email: String,
+    token: String,
+}
 
 #[derive(Default)]
 struct Form {
     email: String,
+    token: String,
     password: String,
+    repeat_password: String,
 }
 
-pub struct LoginRoute {
+impl Form {
+    fn new(q: Option<Query>) -> Self {
+        let q = q.unwrap_or(Query {
+            email: "Invalid email".to_string(),
+            token: "Invalid Token".to_string(),
+        });
+        Self {
+            email: q.email,
+            token: q.token,
+            password: "".to_string(),
+            repeat_password: "".to_string(),
+        }
+    }
+}
+
+pub struct PasswordResetRoute {
     props: Props,
     link: ComponentLink<Self>,
-    form: Form,
+    error: Option<Error>,
     task: Option<FetchTask>,
-    error: Option<APIError>,
+    form: Form,
 }
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub api_client: APIClient,
-    pub on_login: Callback<LoginResponse>,
     pub on_loading: Callback<LoadingProps>,
 }
 
 pub enum Msg {
     Submit(FormData),
-    Response(Result<LoginResponse, APIError>),
+    Response(Result<(), APIError>),
 }
 
-impl Component for LoginRoute {
+impl Component for PasswordResetRoute {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        LoginRoute {
+        let q = RouteService::new().get_query();
+        let q = q.strip_prefix("?").unwrap_or("");
+        log::info!("{}", q);
+        let q: Option<Query> = serde_urlencoded::from_str(&q).ok();
+        PasswordResetRoute {
             props,
             link,
-            form: Default::default(),
-            task: None,
             error: None,
+            task: None,
+            form: Form::new(q),
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Submit(fd) => {
-                self.form.email = fd.get(FIELD_EMAIL).as_string().unwrap();
-                self.form.password = fd.get(FIELD_PASSWORD).as_string().unwrap();
-                if self.task.is_none() {
+                self.form.password = fd.get(FIELD_PWD).as_string().unwrap();
+                self.form.repeat_password = fd.get(FIELD_PWD_REPEAT).as_string().unwrap();
+                if self.form.password == self.form.repeat_password {
                     self.error = None;
-                    self.task = Some(self.props.api_client.session_login(
-                        self.form.email.clone(),
-                        self.form.password.clone(),
-                        self.props.on_loading.clone(),
-                        self.link.callback(Msg::Response),
-                    ));
+                    if self.task.is_none() {
+                        self.task = Some(self.props.api_client.password_reset_submit(
+                            self.form.email.clone(),
+                            self.form.token.clone(),
+                            self.form.password.clone(),
+                            self.props.on_loading.clone(),
+                            self.link.callback(Msg::Response),
+                        ));
+                    }
+                } else {
+                    self.error = Some(Error::PasswordsDoNotMatch);
                 }
             }
             Msg::Response(r) => {
                 self.task = None;
                 match r {
-                    Ok(s) => {
-                        self.props.on_login.emit(s);
+                    Ok(_) => {
+                        let mut agent = RouteAgentDispatcher::new();
+                        agent.send(RouteRequest::ChangeRoute(Route::from(AppRoute::Login)));
                     }
                     Err(e) => {
-                        self.error = Some(e);
+                        self.error = Some(Error::APIError(e));
                     }
                 }
             }
@@ -110,8 +152,8 @@ impl Component for LoginRoute {
                                         class="form-control form-control-lg"
                                         type="email"
                                         placeholder="Email"
-                                        name=FIELD_EMAIL
                                         value=&self.form.email
+                                        disabled=true
                                         />
                                 </fieldset>
                                 <fieldset class="form-group">
@@ -119,21 +161,25 @@ impl Component for LoginRoute {
                                         class="form-control form-control-lg"
                                         type="password"
                                         placeholder="Password"
-                                        name=FIELD_PASSWORD
+                                        name=FIELD_PWD
                                         value=&self.form.password
                                         />
                                 </fieldset>
-                                <p class="text-xs-center">
-                                    <RouterAnchor route=AppRoute::ForgotPassword>
-                                        { "Forgot Password?" }
-                                    </RouterAnchor>
-                                </p>
-                                <ErrorAlert<APIError> error=&self.error />
+                                <fieldset class="form-group">
+                                    <input
+                                        class="form-control form-control-lg"
+                                        type="password"
+                                        placeholder="Repeat Password"
+                                        name=FIELD_PWD_REPEAT
+                                        value=&self.form.repeat_password
+                                        />
+                                </fieldset>
+                                <ErrorAlert<Error> error=&self.error />
                                 <button
                                     class="btn btn-lg btn-primary"
                                     type="submit"
                                     disabled=self.task.is_some()>
-                                    { "Sign in" }
+                                    { "Change Password" }
                                 </button>
                             </fieldset>
                         </form>

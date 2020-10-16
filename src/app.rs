@@ -11,6 +11,7 @@ use crate::routes::dashboard::DashboardRoute;
 use crate::routes::forgot_password::ForgotPasswordRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
+use crate::routes::password_reset::PasswordResetRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -147,6 +148,12 @@ impl Component for App {
                             },
                             AppRoute::ForgotPassword => html! {
                                 <ForgotPasswordRoute
+                                    on_loading=on_loading.clone()
+                                    api_client=api_client.clone()
+                                />
+                            },
+                            AppRoute::ResetPassword => html! {
+                                <PasswordResetRoute
                                     on_loading=on_loading.clone()
                                     api_client=api_client.clone()
                                 />
