@@ -22,13 +22,12 @@ enum Error {
     PasswordsDoNotMatch,
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize)]
 struct Query {
     email: String,
     token: String,
 }
 
-#[derive(Default)]
 struct Form {
     email: String,
     token: String,
@@ -77,7 +76,6 @@ impl Component for PasswordResetRoute {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let q = RouteService::new().get_query();
         let q = q.strip_prefix("?").unwrap_or("");
-        log::info!("{}", q);
         let q: Option<Query> = serde_urlencoded::from_str(&q).ok();
         PasswordResetRoute {
             props,
