@@ -85,7 +85,7 @@ impl APIClient {
         &self,
         id: u32,
         progress: ProgressCallback,
-        callback: Callback<Result<UserResponseItem, APIError>>,
+        callback: Callback<Result<(), APIError>>,
     ) -> FetchTask {
         self.delete(&format!("users/{}", id), vec![], Some(progress), callback)
     }

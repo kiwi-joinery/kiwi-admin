@@ -41,7 +41,8 @@ pub enum Msg {
     LoadResponse(Result<UserResponseItem, APIError>),
     Submit(FormData),
     EditResponse(Result<UserResponseItem, APIError>),
-    DeleteButton,
+    ConfirmDelete,
+    DeleteResponse(Result<(), APIError>),
 }
 
 impl Component for EditUserRoute {
@@ -106,7 +107,26 @@ impl Component for EditUserRoute {
                     }
                 }
             }
-            Msg::DeleteButton => {}
+            Msg::ConfirmDelete => {
+                self.delete_error = None;
+                self.task = Some(self.props.api_client.users_delete(
+                    self.props.user_id,
+                    self.props.on_loading.clone(),
+                    self.link.callback(Msg::DeleteResponse),
+                ));
+            }
+            Msg::DeleteResponse(r) => {
+                self.task = None;
+                match r {
+                    Ok(_) => {
+                        let mut agent = RouteAgentDispatcher::new();
+                        agent.send(RouteRequest::ChangeRoute(Route::from(AppRoute::Users)));
+                    }
+                    Err(e) => {
+                        self.delete_error = Some(e);
+                    }
+                }
+            }
         }
         true
     }
@@ -134,6 +154,9 @@ impl Component for EditUserRoute {
                                 self.form()
                             }
                         }
+                        {
+                            self.delete_modal()
+                        }
                     </div>
                 </div>
             </div>
@@ -149,7 +172,6 @@ impl EditUserRoute {
             let fd = FormData::new_with_form(&f).unwrap();
             Msg::Submit(fd)
         });
-        let ondelete = self.link.callback(|e: MouseEvent| Msg::DeleteButton);
         html! {
         <>
             <h1>{ "Edit user" }</h1>
@@ -184,13 +206,43 @@ impl EditUserRoute {
                 <hr/>
                 <button
                     type="button"
-                    class="btn btn-danger mt-1"
-                    onclick=ondelete
+                    class="btn btn-danger mt-1 mb-3"
+                    data-toggle="modal"
+                    data-target="#deleteModal"
                     > {"Delete User"}
                 </button>
                 <ErrorAlert<APIError> error=&self.delete_error />
             </form>
         </>
+        }
+    }
+
+    fn delete_modal(&self) -> Html {
+        let ondelete = self.link.callback(|e: MouseEvent| Msg::ConfirmDelete);
+        html! {
+            <div id="deleteModal" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{"Delete User"}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>{"Are you sure you want to delete this user?"}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button
+                                type="button"
+                                class="btn btn-danger"
+                                data-dismiss="modal"
+                                onclick=ondelete
+                                >{"Delete"}</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">{"Cancel"}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
     }
 }
