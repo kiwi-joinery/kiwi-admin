@@ -23,9 +23,10 @@ pub struct EditUserRoute {
     props: Props,
     link: ComponentLink<Self>,
     load_task: Option<FetchTask>,
+    task: Option<FetchTask>,
     load_error: Option<APIError>,
-    edit_task: Option<FetchTask>,
     edit_error: Option<APIError>,
+    delete_error: Option<APIError>,
     form: Form,
 }
 
@@ -40,6 +41,7 @@ pub enum Msg {
     LoadResponse(Result<UserResponseItem, APIError>),
     Submit(FormData),
     EditResponse(Result<UserResponseItem, APIError>),
+    DeleteButton,
 }
 
 impl Component for EditUserRoute {
@@ -57,8 +59,9 @@ impl Component for EditUserRoute {
             link,
             load_task: Some(task),
             load_error: None,
-            edit_task: None,
+            task: None,
             edit_error: None,
+            delete_error: None,
             form: Default::default(),
         }
     }
@@ -68,9 +71,9 @@ impl Component for EditUserRoute {
             Msg::Submit(fd) => {
                 self.form.name = fd.get(FIELD_NAME).as_string().unwrap();
                 self.form.email = fd.get(FIELD_EMAIL).as_string().unwrap();
-                if self.load_task.is_none() && self.edit_task.is_none() {
+                if self.load_task.is_none() && self.task.is_none() {
                     self.edit_error = None;
-                    self.edit_task = Some(self.props.api_client.users_update(
+                    self.task = Some(self.props.api_client.users_update(
                         self.props.user_id,
                         self.form.name.clone(),
                         self.form.email.clone(),
@@ -92,7 +95,7 @@ impl Component for EditUserRoute {
                 }
             }
             Msg::EditResponse(r) => {
-                self.edit_task = None;
+                self.task = None;
                 match r {
                     Ok(_) => {
                         let mut agent = RouteAgentDispatcher::new();
@@ -103,6 +106,7 @@ impl Component for EditUserRoute {
                     }
                 }
             }
+            Msg::DeleteButton => {}
         }
         true
     }
@@ -145,9 +149,10 @@ impl EditUserRoute {
             let fd = FormData::new_with_form(&f).unwrap();
             Msg::Submit(fd)
         });
+        let ondelete = self.link.callback(|e: MouseEvent| Msg::DeleteButton);
         html! {
         <>
-            <h1 class="text-xs-center">{ "Edit user" }</h1>
+            <h1>{ "Edit user" }</h1>
             <form onsubmit=onsubmit>
                 <fieldset>
                     <fieldset class="form-group">
@@ -172,10 +177,18 @@ impl EditUserRoute {
                     <button
                         class="btn btn-lg btn-primary"
                         type="submit"
-                        disabled=self.edit_task.is_some()>
-                        { "Update" }
+                        disabled=self.task.is_some()
+                        > { "Update" }
                     </button>
                 </fieldset>
+                <hr/>
+                <button
+                    type="button"
+                    class="btn btn-danger mt-1"
+                    onclick=ondelete
+                    > {"Delete User"}
+                </button>
+                <ErrorAlert<APIError> error=&self.delete_error />
             </form>
         </>
         }

@@ -1,5 +1,5 @@
 use crate::api::error::APIError;
-use crate::api::{APIClient, FormUrlEncoded, ProgressCallback};
+use crate::api::{APIClient, Counted, FormUrlEncoded, ProgressCallback};
 use serde::Deserialize;
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
@@ -15,10 +15,22 @@ pub struct UserResponseItem {
 impl APIClient {
     pub fn users_list(
         &self,
+        limit: u32,
+        offset: u32,
+        search: Option<String>,
         progress: ProgressCallback,
-        callback: Callback<Result<Vec<UserResponseItem>, APIError>>,
+        callback: Callback<Result<Counted<UserResponseItem>, APIError>>,
     ) -> FetchTask {
-        self.get("users", vec![], Some(progress), callback)
+        let mut query = Vec::new();
+        query.push(("limit".to_string(), limit.to_string()));
+        query.push(("offset".to_string(), offset.to_string()));
+        match search {
+            None => {}
+            Some(s) => {
+                query.push(("search".to_string(), s));
+            }
+        }
+        self.get("users", query, Some(progress), callback)
     }
 
     pub fn users_create(

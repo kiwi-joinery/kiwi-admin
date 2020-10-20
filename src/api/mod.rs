@@ -174,3 +174,9 @@ impl<T: Serialize> Into<Text> for FormUrlEncoded<T> {
         Ok(serde_urlencoded::to_string(self.0).unwrap())
     }
 }
+
+#[derive(Deserialize)]
+pub struct Counted<T> {
+    total: u32,
+    results: Vec<T>,
+}

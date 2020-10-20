@@ -5,6 +5,7 @@ pub mod not_found;
 pub mod password_reset;
 pub mod users_create;
 pub mod users_edit;
+pub mod users_list;
 
 use serde::{Deserialize, Serialize};
 use yew_router::agent::RouteRequest;
