@@ -34,7 +34,7 @@ impl Component for ForgotPasswordRoute {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        ForgotPasswordRoute {
+        Self {
             props,
             link,
             error: None,

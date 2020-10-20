@@ -26,7 +26,7 @@ impl APIClient {
         name: String,
         email: String,
         progress: ProgressCallback,
-        callback: Callback<Result<Vec<UserResponseItem>, APIError>>,
+        callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
         body.insert("name", name);

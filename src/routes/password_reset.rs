@@ -77,7 +77,7 @@ impl Component for PasswordResetRoute {
         let q = RouteService::new().get_query();
         let q = q.strip_prefix("?").unwrap_or("");
         let q: Option<Query> = serde_urlencoded::from_str(&q).ok();
-        PasswordResetRoute {
+        Self {
             props,
             link,
             error: None,

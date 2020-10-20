@@ -3,6 +3,7 @@ pub mod forgot_password;
 pub mod login;
 pub mod not_found;
 pub mod password_reset;
+pub mod users_create;
 
 use serde::{Deserialize, Serialize};
 use yew_router::agent::RouteRequest;

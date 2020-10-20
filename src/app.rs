@@ -12,6 +12,7 @@ use crate::routes::forgot_password::ForgotPasswordRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::password_reset::PasswordResetRoute;
+use crate::routes::users_create::CreateUserRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -134,6 +135,14 @@ impl Component for App {
                             AppRoute::Users => html! {
                                 <SidebarComponent active=SidebarActive::Users>
                                     <p>{"Users"}</p>
+                                </SidebarComponent>
+                            },
+                            AppRoute::UsersCreate => html! {
+                                <SidebarComponent>
+                                    <CreateUserRoute
+                                        on_loading=on_loading.clone()
+                                        api_client=api_client.clone()
+                                    />
                                 </SidebarComponent>
                             },
                             AppRoute::Gallery => html! {
