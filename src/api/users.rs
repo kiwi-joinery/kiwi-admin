@@ -7,7 +7,7 @@ use yew::Callback;
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct UserResponseItem {
-    pub id: i32,
+    pub id: u32,
     pub name: String,
     pub email: String,
 }
@@ -42,7 +42,7 @@ impl APIClient {
 
     pub fn users_get(
         &self,
-        id: i32,
+        id: u32,
         progress: Option<ProgressCallback>,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
@@ -51,7 +51,7 @@ impl APIClient {
 
     pub fn users_update(
         &self,
-        id: i32,
+        id: u32,
         name: String,
         email: String,
         progress: ProgressCallback,
@@ -71,7 +71,7 @@ impl APIClient {
 
     pub fn users_delete(
         &self,
-        id: i32,
+        id: u32,
         progress: ProgressCallback,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {

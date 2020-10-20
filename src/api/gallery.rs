@@ -10,7 +10,7 @@ pub type GalleryListResponse = HashMap<String, Vec<GalleryItemResponse>>;
 
 #[derive(Deserialize)]
 pub struct GalleryItemResponse {
-    pub id: i32,
+    pub id: u32,
     pub description: String,
     pub category: String,
     pub files: Vec<GalleryFileResponse>,
@@ -19,9 +19,9 @@ pub struct GalleryItemResponse {
 #[derive(Deserialize)]
 pub struct GalleryFileResponse {
     url: Url,
-    height: i32,
-    width: i32,
-    bytes: i64,
+    height: u32,
+    width: u32,
+    bytes: u32,
 }
 
 impl APIClient {

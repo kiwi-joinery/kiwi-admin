@@ -7,7 +7,7 @@ use yew::services::StorageService;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PersistedAuth {
-    pub user_id: i32,
+    pub user_id: u32,
     token: String,
 }
 
@@ -29,7 +29,7 @@ impl PersistedAuth {
         res.ok().and_then(|x| serde_json::from_str(&x).ok())
     }
 
-    pub fn persist(user_id: i32, token: String) -> PersistedAuth {
+    pub fn persist(user_id: u32, token: String) -> PersistedAuth {
         let x = Self { user_id, token };
         storage().store::<Text>(KEY, Json(&x).into());
         x

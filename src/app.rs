@@ -13,6 +13,7 @@ use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::password_reset::PasswordResetRoute;
 use crate::routes::users_create::CreateUserRoute;
+use crate::routes::users_edit::EditUserRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -145,6 +146,15 @@ impl Component for App {
                                     />
                                 </SidebarComponent>
                             },
+                            AppRoute::UserEdit(id) => html! {
+                                <SidebarComponent>
+                                    <EditUserRoute
+                                        on_loading=on_loading.clone()
+                                        api_client=api_client.clone()
+                                        user_id=id
+                                    />
+                                </SidebarComponent>
+                            },
                             AppRoute::Gallery => html! {
                                 <SidebarComponent active=SidebarActive::Gallery>
                                     <p>{"Gallery"}</p>
@@ -191,7 +201,7 @@ impl Component for App {
 }
 
 impl App {
-    fn load_user_task(&self, id: i32) -> FetchTask {
+    fn load_user_task(&self, id: u32) -> FetchTask {
         self.api_client
             .users_get(id, None, self.link.callback(Msg::UserResponse))
     }
