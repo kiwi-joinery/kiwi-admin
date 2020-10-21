@@ -4,6 +4,7 @@ use crate::api::{APIClient, Counted};
 use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
 use crate::components::pagination::PaginationComponent;
+use crate::components::search::SearchBarComponent;
 use crate::routes::{AppRoute, Route, RouterAnchor};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -96,12 +97,14 @@ impl Component for ListUsersRoute {
             None => 1,
             Some(x) => (x.total as f32 / PAGE_SIZE as f32).ceil() as u32,
         };
+        let search_change = self.link.callback(|s| Msg::SearchChange(s));
         html! {
         <>
             <h1>{ "Users" } </h1>
             <RouterAnchor route=AppRoute::UsersCreate classes="btn btn-secondary">
                 { "Create new user" }
             </RouterAnchor>
+            <SearchBarComponent callback=search_change classes="w-50 mt-3"/>
             {
                 if total_pages >= 1 {
                     html! {
