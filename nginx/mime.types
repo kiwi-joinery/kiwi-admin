@@ -1,3 +1,5 @@
+# https://www.nginx.com/resources/wiki/start/topics/examples/full/
+# Added wasm
 types {
   text/html                             html htm shtml;
   text/css                              css;
