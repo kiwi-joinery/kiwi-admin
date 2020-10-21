@@ -1,0 +1,21 @@
+.navbar {
+    background: #008f53;
+    height: 57px;
+    z-index: 1000;
+    margin-bottom: 0.5em;
+}
+
+.navbar-brand {
+    font-size:1.5rem;
+    padding-top:0!important;
+    margin-right:2rem!important;
+    font-weight: bold;
+    color:#fff!important;
+}
+
+.nav-text {
+    margin-bottom:0!important;
+    display:inline-block;
+    padding: .5rem 1rem;
+    color: #fff;
+}
