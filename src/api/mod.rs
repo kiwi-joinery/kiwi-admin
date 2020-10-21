@@ -175,8 +175,8 @@ impl<T: Serialize> Into<Text> for FormUrlEncoded<T> {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Counted<T> {
-    total: u32,
-    results: Vec<T>,
+    pub total: u32,
+    pub results: Vec<T>,
 }

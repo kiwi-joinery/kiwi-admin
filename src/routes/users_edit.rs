@@ -218,7 +218,7 @@ impl EditUserRoute {
     }
 
     fn delete_modal(&self) -> Html {
-        let ondelete = self.link.callback(|e: MouseEvent| Msg::ConfirmDelete);
+        let ondelete = self.link.callback(|_: MouseEvent| Msg::ConfirmDelete);
         html! {
             <div id="deleteModal" class="modal" tabindex="-1" role="dialog">
                 <div class="modal-dialog" role="document">

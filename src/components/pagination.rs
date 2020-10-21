@@ -27,6 +27,7 @@ impl Props {
             self.displayed_pages >= 3,
             "displayed_page must be greater than or equal to 3"
         );
+        assert!(self.total_pages >= 1, "Must be at least 1 page");
     }
 }
 
@@ -62,7 +63,6 @@ impl Component for PaginationComponent {
     }
 
     fn view(&self) -> Html {
-        let current_page = self.props.current_page;
         let total_pages = self.props.total_pages;
         let edges = self.props.edges;
 
@@ -109,7 +109,7 @@ impl PaginationComponent {
         // We cannot select a range bigger than the total pages
         let select = min(self.props.displayed_pages, self.props.total_pages);
         let lhs = ((select - 1) as f32 / 2.0).ceil() as u32;
-        let mut rhs = ((select - 1) as f32 / 2.0).floor() as u32;
+        let rhs = ((select - 1) as f32 / 2.0).floor() as u32;
         assert_eq!(lhs + rhs + 1, select);
 
         let (start, end) = if pivot < lhs {
@@ -170,8 +170,12 @@ impl PaginationComponent {
         if enabled_link.is_none() {
             classes.push("disabled");
         }
-        let onclick =
-            enabled_link.map(|x| self.link.callback(move |_: MouseEvent| Msg::PageChange(x)));
+        let onclick = enabled_link.map(|x| {
+            self.link.callback(move |e: MouseEvent| {
+                e.prevent_default();
+                Msg::PageChange(x)
+            })
+        });
         html! {
             <li class={classes.join(" ")}>
                 {

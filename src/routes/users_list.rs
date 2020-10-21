@@ -5,12 +5,9 @@ use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
 use crate::components::pagination::PaginationComponent;
 use crate::routes::{AppRoute, Route, RouterAnchor};
-use wasm_bindgen::JsValue;
-use web_sys::{FormData, HtmlFormElement};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 
-const FIELD_SEARCH: &str = "search";
 const PAGE_SIZE: u32 = 20;
 
 pub struct ListUsersRoute {
@@ -31,7 +28,7 @@ pub struct Props {
 
 pub enum Msg {
     PageChange(u32),
-    SearchChange(String),
+    SearchChange(Option<String>),
     Response(Result<Counted<UserResponseItem>, APIError>),
 }
 
@@ -60,7 +57,6 @@ impl Component for ListUsersRoute {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::SearchChange(_) => {}
             Msg::Response(r) => {
                 self.task = None;
                 match r {
@@ -72,8 +68,13 @@ impl Component for ListUsersRoute {
                     }
                 }
             }
+            Msg::SearchChange(s) => {
+                self.search = s;
+                self.reload();
+            }
             Msg::PageChange(x) => {
-                self.offset = x;
+                self.offset = x * PAGE_SIZE;
+                self.reload();
             }
         }
         true
@@ -89,22 +90,49 @@ impl Component for ListUsersRoute {
     }
 
     fn view(&self) -> Html {
-        let _oninput_search = self
-            .link
-            .callback(|ev: InputData| Msg::SearchChange(ev.value));
         let page_change = self.link.callback(|x| Msg::PageChange(x));
+        let page = self.offset / PAGE_SIZE;
+        let total_pages = match &self.results {
+            None => 1,
+            Some(x) => (x.total as f32 / PAGE_SIZE as f32).ceil() as u32,
+        };
         html! {
         <>
             <h1>{ "Users" } </h1>
             <RouterAnchor route=AppRoute::UsersCreate classes="btn btn-secondary">
                 { "Create new user" }
             </RouterAnchor>
-            <PaginationComponent
-                total_pages=2
-                current_page=self.offset
-                callback=page_change
-            />
+            {
+                if total_pages >= 1 {
+                    html! {
+                        <PaginationComponent
+                            total_pages=total_pages
+                            current_page=page
+                            callback=page_change
+                        />
+                    }
+                } else {
+                    html! {
+                        <div class="alert alert-info mt-3" role="alert">
+                             {"No results"}
+                        </div>
+                    }
+                }
+            }
+            <ErrorAlert<APIError> error=&self.error />
         </>
         }
+    }
+}
+
+impl ListUsersRoute {
+    fn reload(&mut self) {
+        self.task = Some(self.props.api_client.users_list(
+            PAGE_SIZE,
+            self.offset,
+            self.search.clone(),
+            self.props.on_loading.clone(),
+            self.link.callback(Msg::Response),
+        ));
     }
 }
