@@ -22,7 +22,7 @@ impl Component for NotFoundRoute {
     fn view(&self) -> Html {
         html! {
             <div class="container">
-                <h1>{ "Not found" }</h1>
+                <h1 class="mb-3">{ "Not found" }</h1>
                 <p>
                     {"The requested page could not be found. "}
                     <br/>

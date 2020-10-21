@@ -137,7 +137,7 @@ impl Component for PasswordResetRoute {
             <div class="container">
                 <div class="row">
                     <div class="col-md-6 offset-md-3 col-xs-12">
-                        <h1 class="text-xs-center">{ "Sign In" }</h1>
+                        <h1 class="mb-3">{ "Sign In" }</h1>
                         <form onsubmit=onsubmit>
                             <fieldset>
                                 <fieldset class="form-group">

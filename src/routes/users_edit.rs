@@ -169,7 +169,7 @@ impl EditUserRoute {
         let onsubmit = self.link.on_form_submit(|f| Msg::Submit(f));
         html! {
         <>
-            <h1>{ "Edit user" }</h1>
+            <h1 class="mb-3">{ "Edit user" }</h1>
             <form onsubmit=onsubmit>
                 <fieldset>
                     <fieldset class="form-group">

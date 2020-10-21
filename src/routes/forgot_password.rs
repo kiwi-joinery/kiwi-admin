@@ -87,7 +87,7 @@ impl Component for ForgotPasswordRoute {
             <div class="container">
                 <div class="row">
                     <div class="col-md-6 offset-md-3 col-xs-12">
-                        <h1 class="text-xs-center">{ "Forgot Password" }</h1>
+                        <h1 class="mb-3">{ "Forgot Password" }</h1>
                         {
                             if self.success {
                                 html! {

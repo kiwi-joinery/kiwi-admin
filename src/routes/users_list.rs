@@ -101,7 +101,7 @@ impl Component for ListUsersRoute {
         let search_change = self.link.callback(|s| Msg::SearchChange(s));
         html! {
         <>
-            <h1>{ "Users" } </h1>
+            <h1 class="mb-3">{ "Users" } </h1>
             <RouterAnchor route=AppRoute::UsersCreate classes="btn btn-secondary">
                 { "Create new user" }
             </RouterAnchor>

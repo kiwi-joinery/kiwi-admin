@@ -21,7 +21,7 @@ impl Component for DashboardRoute {
     fn view(&self) -> Html {
         html! {
         <>
-            <h1>{ "Dashboard" }</h1>
+            <h1 class="mb-3">{ "Dashboard" }</h1>
             <p>{ "Useful links:" }</p>
             <ul>
                 <li>{ "View website stats on " }
