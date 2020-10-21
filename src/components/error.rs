@@ -8,6 +8,8 @@ pub struct ErrorAlert<T: Error + Clone + PartialEq> {
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props<T: Error + Clone + PartialEq> {
     pub error: Option<T>,
+    #[prop_or_default]
+    pub classes: String, // Classes to be added to component.
 }
 
 impl<T: 'static + Error + Clone + PartialEq> Component for ErrorAlert<T> {
@@ -36,7 +38,7 @@ impl<T: 'static + Error + Clone + PartialEq> Component for ErrorAlert<T> {
             {
                 if let Some(error) = &self.props.error {
                     html! {
-                        <div class="alert alert-danger" role="alert">
+                        <div class=format!{"alert alert-danger {}", self.props.classes} role="alert">
                           {error}
                         </div>
                         }

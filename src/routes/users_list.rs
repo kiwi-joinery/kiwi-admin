@@ -5,11 +5,11 @@ use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
 use crate::components::pagination::PaginationComponent;
 use crate::components::search::SearchBarComponent;
-use crate::routes::{AppRoute, Route, RouterAnchor};
+use crate::routes::{AppRoute, RouterAnchor};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 
-const PAGE_SIZE: u32 = 20;
+const PAGE_SIZE: u32 = 10;
 
 pub struct ListUsersRoute {
     props: Props,
@@ -60,6 +60,7 @@ impl Component for ListUsersRoute {
         match msg {
             Msg::Response(r) => {
                 self.task = None;
+                self.results = None;
                 match r {
                     Ok(x) => {
                         self.results = Some(x);
@@ -106,25 +107,58 @@ impl Component for ListUsersRoute {
             </RouterAnchor>
             <SearchBarComponent callback=search_change classes="w-50 mt-3"/>
             {
-                if total_pages >= 1 {
-                    html! {
-                        <PaginationComponent
-                            total_pages=total_pages
-                            current_page=page
-                            callback=page_change
-                        />
+                if self.results.is_some() {
+                    let items = &self.results.as_ref().unwrap().results;
+                    if total_pages >= 1 {
+                        html! {
+                        <>
+                            <PaginationComponent
+                                total_pages=total_pages
+                                current_page=page
+                                callback=page_change
+                            />
+                            <table width="100%" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>{"Name"}</th>
+                                        <th>{"Email Address"}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    { items.iter().map(render_item).collect::<Html>() }
+                                </tbody>
+                            </table>
+                        </>
+                        }
+                    } else {
+                        html! {
+                            <div class="alert alert-info mt-3" role="alert">
+                                 {"No results"}
+                            </div>
+                        }
                     }
-                } else {
-                    html! {
-                        <div class="alert alert-info mt-3" role="alert">
-                             {"No results"}
-                        </div>
-                    }
-                }
+                } else { html! {
+                    <ErrorAlert<APIError> classes="mt-3" error=&self.error />
+                }}
             }
-            <ErrorAlert<APIError> error=&self.error />
+
         </>
         }
+    }
+}
+
+fn render_item(x: &UserResponseItem) -> Html {
+    html! {
+        <tr>
+            <td>{&x.name}</td>
+            <td>{&x.email}</td>
+            <td>
+                <RouterAnchor route=AppRoute::UserEdit(x.id) classes="btn btn-secondary">
+                    { "Edit" }
+                </RouterAnchor>
+            </td>
+        </tr>
     }
 }
 
