@@ -15,7 +15,7 @@ impl<T: 'static + Error + Clone + PartialEq> Component for ErrorAlert<T> {
     type Properties = Props<T>;
 
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        ErrorAlert { props }
+        Self { props }
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {

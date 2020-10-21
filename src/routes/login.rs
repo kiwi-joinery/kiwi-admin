@@ -3,9 +3,9 @@ use crate::api::session::LoginResponse;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
+use crate::form_data::GetFormData;
 use crate::routes::{AppRoute, RouterAnchor};
-use wasm_bindgen::JsValue;
-use web_sys::{FormData, HtmlFormElement};
+use web_sys::FormData;
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 
@@ -92,12 +92,7 @@ impl Component for LoginRoute {
     }
 
     fn view(&self) -> Html {
-        let onsubmit = self.link.callback(|e: FocusEvent| {
-            e.prevent_default();
-            let f: HtmlFormElement = JsValue::from(e.target().unwrap()).into();
-            let fd = FormData::new_with_form(&f).unwrap();
-            Msg::Submit(fd)
-        });
+        let onsubmit = self.link.on_form_submit(|f| Msg::Submit(f));
         html! {
             <div class="container">
                 <div class="row">

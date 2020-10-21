@@ -8,7 +8,7 @@ impl Component for NotFoundRoute {
     type Properties = ();
 
     fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        NotFoundRoute {}
+        Self {}
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {

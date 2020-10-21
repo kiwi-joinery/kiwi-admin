@@ -31,7 +31,7 @@ impl Component for HeaderComponent {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        HeaderComponent {
+        Self {
             props,
             link,
             logout_task: None,

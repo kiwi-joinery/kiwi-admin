@@ -5,6 +5,7 @@ mod api;
 mod app;
 pub mod auth;
 mod components;
+mod form_data;
 mod routes;
 
 use app::App;

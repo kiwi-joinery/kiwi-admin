@@ -2,8 +2,8 @@ use crate::api::error::APIError;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
-use wasm_bindgen::JsValue;
-use web_sys::{FormData, HtmlFormElement};
+use crate::form_data::GetFormData;
+use web_sys::FormData;
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 
@@ -108,12 +108,7 @@ impl Component for ForgotPasswordRoute {
 
 impl ForgotPasswordRoute {
     fn form(&self) -> Html {
-        let onsubmit = self.link.callback(|e: FocusEvent| {
-            e.prevent_default();
-            let f: HtmlFormElement = JsValue::from(e.target().unwrap()).into();
-            let fd = FormData::new_with_form(&f).unwrap();
-            Msg::Submit(fd)
-        });
+        let onsubmit = self.link.on_form_submit(|f| Msg::Submit(f));
         html! {
         <>
             <p>{ "Enter your account email address to receive a password reset" }</p>

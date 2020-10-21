@@ -1,13 +1,13 @@
 use yew::prelude::*;
 
-pub struct Footer {}
+pub struct FooterComponent {}
 
-impl Component for Footer {
+impl Component for FooterComponent {
     type Message = ();
     type Properties = ();
 
     fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Footer {}
+        Self {}
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {
