@@ -3,6 +3,7 @@ use crate::api::users::UserResponseItem;
 use crate::api::{APIClient, Counted};
 use crate::components::error::ErrorAlert;
 use crate::components::loading::LoadingProps;
+use crate::components::pagination::PaginationComponent;
 use crate::routes::{AppRoute, Route, RouterAnchor};
 use wasm_bindgen::JsValue;
 use web_sys::{FormData, HtmlFormElement};
@@ -29,6 +30,7 @@ pub struct Props {
 }
 
 pub enum Msg {
+    PageChange(u32),
     SearchChange(String),
     Response(Result<Counted<UserResponseItem>, APIError>),
 }
@@ -70,6 +72,9 @@ impl Component for ListUsersRoute {
                     }
                 }
             }
+            Msg::PageChange(x) => {
+                self.offset = x;
+            }
         }
         true
     }
@@ -87,12 +92,18 @@ impl Component for ListUsersRoute {
         let _oninput_search = self
             .link
             .callback(|ev: InputData| Msg::SearchChange(ev.value));
+        let page_change = self.link.callback(|x| Msg::PageChange(x));
         html! {
         <>
             <h1>{ "Users" } </h1>
             <RouterAnchor route=AppRoute::UsersCreate classes="btn btn-secondary">
                 { "Create new user" }
             </RouterAnchor>
+            <PaginationComponent
+                total_pages=2
+                current_page=self.offset
+                callback=page_change
+            />
         </>
         }
     }
