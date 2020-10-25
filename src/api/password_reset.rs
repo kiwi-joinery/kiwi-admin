@@ -1,5 +1,6 @@
 use crate::api::error::APIError;
-use crate::api::{APIClient, FormUrlEncoded, ProgressCallback};
+use crate::api::{APIClient, FormUrlEncoded};
+use crate::loader_task::LoadingFunction;
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
 use yew::Callback;
@@ -8,7 +9,7 @@ impl APIClient {
     pub fn password_reset_request(
         &self,
         email: String,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<(), APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
@@ -17,7 +18,7 @@ impl APIClient {
             "password_reset/request",
             vec![],
             FormUrlEncoded(body),
-            Some(progress),
+            Some(loader),
             callback,
         )
     }
@@ -26,7 +27,7 @@ impl APIClient {
         email: String,
         token: String,
         new_password: String,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<(), APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
@@ -37,7 +38,7 @@ impl APIClient {
             "password_reset/submit",
             vec![],
             FormUrlEncoded(body),
-            Some(progress),
+            Some(loader),
             callback,
         )
     }

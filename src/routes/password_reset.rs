@@ -1,8 +1,8 @@
 use crate::api::error::APIError;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
-use crate::components::loading::LoadingProps;
 use crate::form_data::GetFormData;
+use crate::loader_task::LoadingFunction;
 use crate::routes::{AppRoute, Route, RouteAgentDispatcher, RouteService};
 use serde::Deserialize;
 use thiserror::Error;
@@ -61,7 +61,7 @@ pub struct PasswordResetRoute {
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub api_client: APIClient,
-    pub on_loading: Callback<LoadingProps>,
+    pub on_loading: LoadingFunction,
 }
 
 pub enum Msg {

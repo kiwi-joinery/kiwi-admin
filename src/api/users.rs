@@ -1,5 +1,6 @@
 use crate::api::error::APIError;
-use crate::api::{APIClient, Counted, FormUrlEncoded, ProgressCallback};
+use crate::api::{APIClient, Counted, FormUrlEncoded};
+use crate::loader_task::LoadingFunction;
 use serde::Deserialize;
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
@@ -18,7 +19,7 @@ impl APIClient {
         limit: u32,
         offset: u32,
         search: Option<String>,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<Counted<UserResponseItem>, APIError>>,
     ) -> FetchTask {
         let mut query = Vec::new();
@@ -30,14 +31,14 @@ impl APIClient {
                 query.push(("search".to_string(), s));
             }
         }
-        self.get("users", query, Some(progress), callback)
+        self.get("users", query, Some(loader), callback)
     }
 
     pub fn users_create(
         &self,
         name: String,
         email: String,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
@@ -47,7 +48,7 @@ impl APIClient {
             "users",
             vec![],
             FormUrlEncoded(body),
-            Some(progress),
+            Some(loader),
             callback,
         )
     }
@@ -55,10 +56,10 @@ impl APIClient {
     pub fn users_get(
         &self,
         id: u32,
-        progress: Option<ProgressCallback>,
+        loader: Option<LoadingFunction>,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
-        self.get(&format!("users/{}", id), vec![], progress, callback)
+        self.get(&format!("users/{}", id), vec![], loader, callback)
     }
 
     pub fn users_update(
@@ -66,7 +67,7 @@ impl APIClient {
         id: u32,
         name: String,
         email: String,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<UserResponseItem, APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
@@ -76,7 +77,7 @@ impl APIClient {
             &format!("users/{}", id),
             vec![],
             FormUrlEncoded(body),
-            Some(progress),
+            Some(loader),
             callback,
         )
     }
@@ -84,9 +85,9 @@ impl APIClient {
     pub fn users_delete(
         &self,
         id: u32,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<(), APIError>>,
     ) -> FetchTask {
-        self.delete(&format!("users/{}", id), vec![], Some(progress), callback)
+        self.delete(&format!("users/{}", id), vec![], Some(loader), callback)
     }
 }

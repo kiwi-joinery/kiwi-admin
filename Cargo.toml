@@ -26,4 +26,4 @@ headers = "0.3.2"
 
 [dependencies.web-sys]
 version = "0.3.45"
-features = [ "FormData", "HtmlFormElement", "EventTarget" ]
+features = [ "FormData", "HtmlFormElement", "EventTarget", "FileList", "File" ]

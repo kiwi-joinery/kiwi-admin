@@ -2,9 +2,9 @@ use crate::api::error::APIError;
 use crate::api::users::UserResponseItem;
 use crate::api::{APIClient, Counted};
 use crate::components::error::ErrorAlert;
-use crate::components::loading::LoadingProps;
 use crate::components::pagination::PaginationComponent;
 use crate::components::search::SearchBarComponent;
+use crate::loader_task::LoadingFunction;
 use crate::routes::{AppRoute, RouterAnchor};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -24,7 +24,7 @@ pub struct ListUsersRoute {
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub api_client: APIClient,
-    pub on_loading: Callback<LoadingProps>,
+    pub on_loading: LoadingFunction,
 }
 
 pub enum Msg {

@@ -3,9 +3,10 @@
 #[allow(dead_code)]
 mod api;
 mod app;
-pub mod auth;
+mod auth;
 mod components;
 mod form_data;
+mod loader_task;
 mod routes;
 
 use app::App;

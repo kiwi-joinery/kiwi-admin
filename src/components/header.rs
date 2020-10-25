@@ -1,7 +1,7 @@
 use crate::api::error::APIError;
 use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
-use crate::components::loading::LoadingProps;
+use crate::loader_task::LoadingFunction;
 use crate::routes::{AppRoute, RouterAnchor};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -17,7 +17,7 @@ pub struct Props {
     pub is_signed_in: bool,
     pub current_user: Option<UserResponseItem>,
     pub on_logout: Callback<()>,
-    pub on_loading: Callback<LoadingProps>,
+    pub on_loading: LoadingFunction,
     pub api_client: APIClient,
 }
 

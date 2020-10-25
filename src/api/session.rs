@@ -1,6 +1,7 @@
 use crate::api::error::APIError;
 use crate::api::users::UserResponseItem;
-use crate::api::{APIClient, FormUrlEncoded, ProgressCallback};
+use crate::api::{APIClient, FormUrlEncoded};
+use crate::loader_task::LoadingFunction;
 use serde::Deserialize;
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
@@ -17,7 +18,7 @@ impl APIClient {
         &self,
         email: String,
         password: String,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<LoginResponse, APIError>>,
     ) -> FetchTask {
         let mut body = HashMap::new();
@@ -27,16 +28,16 @@ impl APIClient {
             "sessions/login",
             vec![],
             FormUrlEncoded(body),
-            Some(progress),
+            Some(loader),
             callback,
         )
     }
 
     pub fn session_logout(
         &self,
-        progress: ProgressCallback,
+        loader: LoadingFunction,
         callback: Callback<Result<(), APIError>>,
     ) -> FetchTask {
-        self.delete("sessions/logout", vec![], Some(progress), callback)
+        self.delete("sessions/logout", vec![], Some(loader), callback)
     }
 }

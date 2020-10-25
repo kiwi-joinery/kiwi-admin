@@ -2,8 +2,8 @@ use crate::api::error::APIError;
 use crate::api::users::UserResponseItem;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
-use crate::components::loading::LoadingProps;
 use crate::form_data::GetFormData;
+use crate::loader_task::LoadingFunction;
 use crate::routes::{AppRoute, Route, RouteAgentDispatcher};
 use web_sys::FormData;
 use yew::prelude::*;
@@ -30,7 +30,7 @@ pub struct CreateUserRoute {
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub api_client: APIClient,
-    pub on_loading: Callback<LoadingProps>,
+    pub on_loading: LoadingFunction,
 }
 
 pub enum Msg {

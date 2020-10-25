@@ -1,8 +1,8 @@
 use crate::api::error::APIError;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
-use crate::components::loading::LoadingProps;
 use crate::form_data::GetFormData;
+use crate::loader_task::LoadingFunction;
 use web_sys::FormData;
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -21,7 +21,7 @@ pub struct ForgotPasswordRoute {
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub api_client: APIClient,
-    pub on_loading: Callback<LoadingProps>,
+    pub on_loading: LoadingFunction,
 }
 
 pub enum Msg {

@@ -23,11 +23,8 @@ impl LoadingProps {
             text: None,
         }
     }
-    pub fn enabled(x: Option<&str>) -> LoadingProps {
-        LoadingProps {
-            active: true,
-            text: x.map(|x| x.to_string()),
-        }
+    pub fn enabled(text: Option<String>) -> LoadingProps {
+        LoadingProps { active: true, text }
     }
 }
 
@@ -35,8 +32,8 @@ pub enum Msg {
     Update,
 }
 
-// Wait before displaying the loader - if it finishes before this time then it is never shown.
-const ONLY_SHOW_AFTER_MILLIS: u64 = 500;
+// Wait before displaying the spinner - if it finishes before this time then it is never shown.
+const ONLY_SHOW_AFTER_MILLIS: u64 = 400;
 // If the loader is shown it must appear for at least this time - so it doesn't do an ugly flash
 const SHOW_FOR_AT_LEAST_MILLIS: u64 = 300;
 
@@ -94,6 +91,10 @@ impl Component for LoadingComponent {
                                 }
                             }
                         </div>
+                    }
+                } else if self.props.active {
+                    html! {
+                        <div id="loading-component" style="background-color:transparent"></div>
                     }
                 } else {
                     html!{}

@@ -7,8 +7,10 @@ use crate::components::footer::FooterComponent;
 use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::components::sidebar::{SidebarActive, SidebarComponent};
+use crate::loader_task::{LoadingFunction, LoadingTask};
 use crate::routes::dashboard::DashboardRoute;
 use crate::routes::forgot_password::ForgotPasswordRoute;
+use crate::routes::gallery_create::CreateGalleryItemRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::password_reset::PasswordResetRoute;
@@ -16,6 +18,7 @@ use crate::routes::users_create::CreateUserRoute;
 use crate::routes::users_edit::EditUserRoute;
 use crate::routes::users_list::ListUsersRoute;
 use crate::routes::{on_route_change, AppRoute, Route, RouteAgentBridge, RouteService, Router};
+use std::rc::Rc;
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 use yew_router::agent::RouteRequest;
@@ -38,9 +41,11 @@ pub struct App {
 pub enum Msg {
     LoggedIn(LoginResponse),
     Logout,
-    GlobalLoader(LoadingProps),
     UserResponse(Result<UserResponseItem, APIError>),
     RouteUpdated(Route),
+    StartLoading,
+    StopLoading,
+    UpdateLoadingText(Option<String>),
 }
 
 impl Component for App {
@@ -88,15 +93,24 @@ impl Component for App {
                 self.router_agent
                     .send(RouteRequest::ChangeRoute(Route::from(AppRoute::Login)));
             }
-            Msg::GlobalLoader(p) => {
-                self.loading = p;
-            }
             Msg::UserResponse(res) => match res {
                 Ok(u) => self.current_user = Some(u),
                 Err(e) => log::error!("Couldn't load the current user: {}", e),
             },
             Msg::RouteUpdated(r) => {
                 on_route_change(r, self.api_client.auth_header().is_some());
+            }
+            Msg::StartLoading => {
+                if self.loading.active {
+                    log::error!("Global loader is already active");
+                }
+                self.loading = LoadingProps::enabled(None);
+            }
+            Msg::StopLoading => {
+                self.loading = LoadingProps::disabled();
+            }
+            Msg::UpdateLoadingText(x) => {
+                self.loading = LoadingProps::enabled(x);
             }
         }
         true
@@ -109,12 +123,18 @@ impl Component for App {
     fn view(&self) -> Html {
         let loading_props = self.loading.clone();
         let api_client = self.api_client.clone();
-        let on_loading = self.link.callback(|x| Msg::GlobalLoader(x));
+        let link_clone = self.link.clone();
+        let loading_function = LoadingFunction(Rc::new(move || {
+            link_clone.send_message(Msg::StartLoading);
+            Box::new(AppLoadingTask {
+                link: link_clone.clone(),
+            })
+        }));
         let on_login = self.link.callback(|x| Msg::LoggedIn(x));
         html! {
             <>
                 <HeaderComponent
-                    on_loading=on_loading.clone()
+                    on_loading=loading_function.clone()
                     is_signed_in=api_client.auth_header().is_some()
                     current_user=self.current_user.clone()
                     on_logout=self.link.callback(|_| Msg::Logout)
@@ -125,7 +145,7 @@ impl Component for App {
                     render = Router::render(move |switch: AppRoute| {
                         match switch {
                             AppRoute::Login => html! {<LoginRoute
-                                on_loading=on_loading.clone()
+                                on_loading=loading_function.clone()
                                 on_login=on_login.clone()
                                 api_client=api_client.clone()
                             />},
@@ -137,7 +157,7 @@ impl Component for App {
                             AppRoute::Users => html! {
                                 <SidebarComponent active=SidebarActive::Users>
                                     <ListUsersRoute
-                                        on_loading=on_loading.clone()
+                                        on_loading=loading_function.clone()
                                         api_client=api_client.clone()
                                     />
                                 </SidebarComponent>
@@ -145,7 +165,7 @@ impl Component for App {
                             AppRoute::UsersCreate => html! {
                                 <SidebarComponent>
                                     <CreateUserRoute
-                                        on_loading=on_loading.clone()
+                                        on_loading=loading_function.clone()
                                         api_client=api_client.clone()
                                     />
                                 </SidebarComponent>
@@ -153,7 +173,7 @@ impl Component for App {
                             AppRoute::UserEdit(id) => html! {
                                 <SidebarComponent>
                                     <EditUserRoute
-                                        on_loading=on_loading.clone()
+                                        on_loading=loading_function.clone()
                                         api_client=api_client.clone()
                                         user_id=id
                                     />
@@ -166,18 +186,21 @@ impl Component for App {
                             },
                             AppRoute::GalleryCreate => html! {
                                 <SidebarComponent>
-                                    <p>{"Gallery Create"}</p>
+                                    <CreateGalleryItemRoute
+                                        loader=loading_function.clone()
+                                        api_client=api_client.clone()
+                                    />
                                 </SidebarComponent>
                             },
                             AppRoute::ForgotPassword => html! {
                                 <ForgotPasswordRoute
-                                    on_loading=on_loading.clone()
+                                    on_loading=loading_function.clone()
                                     api_client=api_client.clone()
                                 />
                             },
                             AppRoute::ResetPassword => html! {
                                 <PasswordResetRoute
-                                    on_loading=on_loading.clone()
+                                    on_loading=loading_function.clone()
                                     api_client=api_client.clone()
                                 />
                             },
@@ -208,5 +231,21 @@ impl App {
     fn load_user_task(&self, id: u32) -> FetchTask {
         self.api_client
             .users_get(id, None, self.link.callback(Msg::UserResponse))
+    }
+}
+
+pub struct AppLoadingTask {
+    link: ComponentLink<App>,
+}
+
+impl LoadingTask for AppLoadingTask {
+    fn set_text(&self, x: Option<String>) {
+        self.link.send_message(Msg::UpdateLoadingText(x));
+    }
+}
+
+impl Drop for AppLoadingTask {
+    fn drop(&mut self) {
+        self.link.send_message(Msg::StopLoading);
     }
 }
