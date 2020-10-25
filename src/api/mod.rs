@@ -1,6 +1,5 @@
 use crate::api::error::resolve;
-use crate::components::loading::LoadingProps;
-use crate::loader_task::{BoxedLoadingTask, LoadingFunction};
+use crate::loader_task::{BoxedLoadingTask, LoadingFunction, LoadingTaskConfig};
 use headers::authorization::Basic;
 use headers::{Authorization, ContentType, HeaderMapExt};
 use http::{Method, Request, Response};
@@ -56,7 +55,7 @@ impl APIClient {
         B: TextBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
-        let loader_task: Option<BoxedLoadingTask> = loader.map(|x| x());
+        let loader_task: Option<BoxedLoadingTask> = loader.map(|x| x(LoadingTaskConfig::default()));
         let mut url = self.base_url.join(path).unwrap();
         url.query_pairs_mut().extend_pairs(query);
         let mut builder = Request::builder().method(method).uri(url.as_str());

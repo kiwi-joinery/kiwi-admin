@@ -7,7 +7,7 @@ use crate::components::footer::FooterComponent;
 use crate::components::header::HeaderComponent;
 use crate::components::loading::{LoadingComponent, LoadingProps};
 use crate::components::sidebar::{SidebarActive, SidebarComponent};
-use crate::loader_task::{LoadingFunction, LoadingTask};
+use crate::loader_task::{LoadingFunction, LoadingTask, LoadingTaskConfig};
 use crate::routes::dashboard::DashboardRoute;
 use crate::routes::forgot_password::ForgotPasswordRoute;
 use crate::routes::gallery_create::CreateGalleryItemRoute;
@@ -43,7 +43,7 @@ pub enum Msg {
     Logout,
     UserResponse(Result<UserResponseItem, APIError>),
     RouteUpdated(Route),
-    StartLoading,
+    StartLoading(LoadingTaskConfig),
     StopLoading,
     UpdateLoadingText(Option<String>),
 }
@@ -100,17 +100,21 @@ impl Component for App {
             Msg::RouteUpdated(r) => {
                 on_route_change(r, self.api_client.auth_header().is_some());
             }
-            Msg::StartLoading => {
+            Msg::StartLoading(cfg) => {
+                log::info!("Starting loading");
                 if self.loading.active {
                     log::error!("Global loader is already active");
                 }
-                self.loading = LoadingProps::enabled(None);
+                self.loading.active = true;
+                self.loading.delay_full_appearance = cfg.get_delay_full_appearance();
+                self.loading.text = None;
             }
             Msg::StopLoading => {
-                self.loading = LoadingProps::disabled();
+                log::info!("Stopping loading");
+                self.loading.active = false;
             }
             Msg::UpdateLoadingText(x) => {
-                self.loading = LoadingProps::enabled(x);
+                self.loading.text = x;
             }
         }
         true
@@ -124,8 +128,8 @@ impl Component for App {
         let loading_props = self.loading.clone();
         let api_client = self.api_client.clone();
         let link_clone = self.link.clone();
-        let loading_function = LoadingFunction(Rc::new(move || {
-            link_clone.send_message(Msg::StartLoading);
+        let loading_function = LoadingFunction(Rc::new(move |cfg| {
+            link_clone.send_message(Msg::StartLoading(cfg));
             Box::new(AppLoadingTask {
                 link: link_clone.clone(),
             })

@@ -2,8 +2,9 @@ use crate::api::error::APIError;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::form_data::GetFormData;
-use crate::loader_task::{BoxedLoadingTask, LoadingFunction};
+use crate::loader_task::{BoxedLoadingTask, LoadingFunction, LoadingTaskConfig};
 use crate::routes::{AppRoute, Route, RouteAgentDispatcher};
+use std::io::Cursor;
 use web_sys::{File, FormData};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -60,15 +61,31 @@ impl Component for CreateGalleryItemRoute {
             Msg::Submit(fd) => {}
             Msg::Response(r) => {}
             Msg::SelectFile(file) => {
-                self.loading_task = Some((*self.props.loader)());
+                self.loading_task = Some((*self.props.loader)(
+                    LoadingTaskConfig::default().delay_full_appearance(false),
+                ));
                 let callback = self.link.callback(Msg::FileLoaded);
                 let mut service = ReaderService::new();
                 self.read_task = Some(service.read_file(file, callback).unwrap());
             }
             Msg::FileLoaded(data) => {
-                self.loading_task = None;
                 self.read_task = None;
-                log::info!("{} {}", data.name, data.content.len())
+                log::info!("{} {}", data.name, data.content.len());
+                let exifreader = exif::Reader::new();
+                let exif = match exifreader.read_from_container(&mut Cursor::new(data.content)) {
+                    Ok(exif) => {
+                        for f in exif.fields() {
+                            log::info!(
+                                "{} {} {}",
+                                f.tag,
+                                f.ifd_num,
+                                f.display_value().with_unit(&exif)
+                            );
+                        }
+                    }
+                    Err(e) => log::error!("{}", e),
+                };
+                self.loading_task = None;
             }
         }
         true
