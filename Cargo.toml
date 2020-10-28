@@ -23,7 +23,8 @@ serde = "1.0"
 http = "0.2.1"
 url = { version = "2.1.1", features = ["serde"] }
 headers = "0.3.2"
-kamadak-exif = "0.5.2"
+imagesize = "0.8"
+num-rational = "0.3"
 
 [dependencies.web-sys]
 version = "0.3.45"

@@ -4,12 +4,17 @@ use crate::components::error::ErrorAlert;
 use crate::form_data::GetFormData;
 use crate::loader_task::{BoxedLoadingTask, LoadingFunction, LoadingTaskConfig};
 use crate::routes::{AppRoute, Route, RouteAgentDispatcher};
-use std::io::Cursor;
+use imagesize::{ImageError, ImageSize};
+use num_rational::Ratio;
+use std::rc::Rc;
+use thiserror::Error;
 use web_sys::{File, FormData};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{FileData, ReaderService, ReaderTask};
-use yew_router::agent::RouteRequest;
+
+const MIN_RECOMMENDED_RESOLUTION: usize = 1920 * 1080;
+const RECOMMENDED_ASPECT: Ratio<usize> = Ratio::new_raw(16, 9);
 
 #[derive(Default)]
 struct Form {
@@ -17,14 +22,41 @@ struct Form {
     email: String,
 }
 
+#[derive(Debug, Error, Clone)]
+enum Error {
+    #[error("{0}")]
+    APIError(APIError),
+    #[error("{0}")]
+    ImageError(Rc<ImageError>),
+}
+
+impl PartialEq for Error {
+    fn eq(&self, other: &Self) -> bool {
+        match &self {
+            Error::APIError(e) => {
+                if let Error::APIError(f) = other {
+                    return e.eq(f);
+                }
+            }
+            Error::ImageError(e) => {
+                if let Error::ImageError(f) = other {
+                    return Rc::ptr_eq(e, f);
+                }
+            }
+        }
+        return false;
+    }
+}
+
 pub struct CreateGalleryItemRoute {
     props: Props,
     link: ComponentLink<Self>,
-    error: Option<APIError>,
+    error: Option<Error>,
     task: Option<FetchTask>,
     form: Form,
     loading_task: Option<BoxedLoadingTask>,
     read_task: Option<ReaderTask>,
+    image: Option<(FileData, ImageSize)>,
 }
 
 #[derive(Properties, Clone, PartialEq)]
@@ -53,6 +85,7 @@ impl Component for CreateGalleryItemRoute {
             form: Default::default(),
             loading_task: None,
             read_task: None,
+            image: None,
         }
     }
 
@@ -70,21 +103,17 @@ impl Component for CreateGalleryItemRoute {
             }
             Msg::FileLoaded(data) => {
                 self.read_task = None;
+                self.image = None;
+                self.error = None;
                 log::info!("{} {}", data.name, data.content.len());
-                let exifreader = exif::Reader::new();
-                let exif = match exifreader.read_from_container(&mut Cursor::new(data.content)) {
-                    Ok(exif) => {
-                        for f in exif.fields() {
-                            log::info!(
-                                "{} {} {}",
-                                f.tag,
-                                f.ifd_num,
-                                f.display_value().with_unit(&exif)
-                            );
-                        }
+                match imagesize::blob_size(&data.content) {
+                    Ok(s) => {
+                        self.image = Some((data, s));
                     }
-                    Err(e) => log::error!("{}", e),
-                };
+                    Err(e) => {
+                        self.error = Some(Error::ImageError(Rc::new(e)));
+                    }
+                }
                 self.loading_task = None;
             }
         }
@@ -124,6 +153,7 @@ impl Component for CreateGalleryItemRoute {
                                     onchange=onchange
                                     />
                             </fieldset>
+                            { self.image_info() }
                             <fieldset class="form-group">
                                 <label for="exampleFormControlSelect1">{ "Category" }</label>
                                 <select class="form-control form-control-lg" id="exampleFormControlSelect1">
@@ -139,11 +169,11 @@ impl Component for CreateGalleryItemRoute {
                                     maxlength="4096"
                                     />
                             </fieldset>
-                            <ErrorAlert<APIError> error=&self.error />
+                            <ErrorAlert<Error> error=&self.error />
                             <button
                                 class="btn btn-lg btn-primary"
                                 type="submit"
-                                disabled=self.task.is_some()>
+                                disabled=self.task.is_some() || self.image.is_none()>
                                 { "Upload" }
                             </button>
                         </form>
@@ -151,5 +181,40 @@ impl Component for CreateGalleryItemRoute {
                 </div>
             </div>
         }
+    }
+}
+
+impl CreateGalleryItemRoute {
+    fn image_info(&self) -> Html {
+        match &self.image {
+            None => return html! {},
+            Some((_, size)) => {
+                let resolution = size.height * size.width;
+                let aspect_ratio = Ratio::new(size.width, size.height);
+                let mut warnings = Vec::new();
+                if resolution < MIN_RECOMMENDED_RESOLUTION {
+                    warnings.push("Resolution is lower than the recommended minimum (1080p)")
+                }
+                if aspect_ratio != RECOMMENDED_ASPECT {
+                    warnings.push("Different aspect ratio to the recommended size (16:9)")
+                }
+                if warnings.len() > 0 {
+                    return html! {
+                        <div class="alert alert-warning" role="alert">
+                            {"Image Warnings:"}
+                            <ul>
+                                {warnings
+                                .iter()
+                                .map(|x| html! {<li>{x}</li>})
+                                .collect::<Html>()
+                                }
+                            </ul>
+                        </div>
+                    };
+                } else {
+                    return html! {};
+                }
+            }
+        };
     }
 }
