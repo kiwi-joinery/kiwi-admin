@@ -1,4 +1,5 @@
 use crate::api::error::APIError;
+use crate::api::gallery::Category;
 use crate::api::APIClient;
 use crate::components::error::ErrorAlert;
 use crate::form_data::GetFormData;
@@ -91,7 +92,15 @@ impl Component for CreateGalleryItemRoute {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Submit(fd) => {}
+            Msg::Submit(fd) => {
+                self.task = Some(self.props.api_client.gallery_create(
+                    &self.image.as_ref().unwrap().0,
+                    "".to_string(),
+                    Category::Doors,
+                    self.props.loader.clone(),
+                    self.link.callback(Msg::Response),
+                ));
+            }
             Msg::Response(r) => {}
             Msg::SelectFile(file) => {
                 self.loading_task = Some((*self.props.loader)(

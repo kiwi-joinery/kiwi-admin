@@ -1,7 +1,8 @@
 use http::StatusCode;
 use serde::Deserialize;
 use std::fmt::{Display, Formatter};
-use yew::format::Text;
+use std::str;
+use yew::format::Binary;
 use yew::services::fetch::Response;
 
 #[derive(PartialEq, Deserialize, Debug, Clone)]
@@ -50,11 +51,12 @@ impl Display for APIError {
     }
 }
 
-pub fn resolve<T>(response: Response<Text>) -> Result<T, APIError>
+pub fn resolve<T>(response: Response<Binary>) -> Result<T, APIError>
 where
     for<'de> T: Deserialize<'de>,
 {
-    if let (meta, Ok(data)) = response.into_parts() {
+    if let (meta, Ok(bin)) = response.into_parts() {
+        let data = str::from_utf8(&bin).map_err(|_| APIError::DeserializeError)?;
         if meta.status.is_success() {
             serde_json::from_str(&data).map_err(|_| APIError::DeserializeError)
         } else {

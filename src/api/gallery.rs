@@ -1,19 +1,29 @@
 use crate::api::error::APIError;
+use crate::api::multipart::{Multipart, MultipartFile};
 use crate::api::APIClient;
 use crate::loader_task::LoadingFunction;
+use http::Method;
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::fmt::Formatter;
 use url::Url;
 use yew::services::fetch::FetchTask;
+use yew::services::reader::FileData;
 use yew::Callback;
 
-pub type GalleryListResponse = HashMap<String, Vec<GalleryItemResponse>>;
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum Category {
+    Staircases,
+    Windows,
+    Doors,
+    Other,
+}
 
 #[derive(Deserialize)]
 pub struct GalleryItemResponse {
     pub id: u32,
     pub description: String,
-    pub category: String,
+    pub category: Category,
     pub files: Vec<GalleryFileResponse>,
 }
 
@@ -29,19 +39,36 @@ impl APIClient {
     pub fn gallery_list(
         &self,
         loader: LoadingFunction,
-        callback: Callback<Result<GalleryListResponse, APIError>>,
+        callback: Callback<Result<Vec<GalleryItemResponse>, APIError>>,
     ) -> FetchTask {
         self.get("gallery/list", vec![], Some(loader), callback)
     }
 
-    // pub fn gallery_create(
-    //     &self,
-    //     description: String,
-    //     category: String,
-    //     callback: Callback<Result<(), APIError>>,
-    // ) -> FetchTask {
-    //     self.request("/users", vec![], Method::POST, body, callback)
-    // }
+    pub fn gallery_create(
+        &self,
+        image: &FileData,
+        description: String,
+        category: Category,
+        loader: LoadingFunction,
+        callback: Callback<Result<(), APIError>>,
+    ) -> FetchTask {
+        let mut form = Multipart::new();
+        form.add_text("description", description);
+        form.add_text("category", category.to_string());
+        form.add_file(MultipartFile::new(
+            "image",
+            image.content.clone(),
+            Some(image.name.clone()),
+        ));
+        self.request(
+            "gallery",
+            vec![],
+            Method::POST,
+            form,
+            Some(loader),
+            callback,
+        )
+    }
     //
     // pub fn users_update(
     //     &self,
@@ -63,4 +90,15 @@ impl APIClient {
     // ) -> FetchTask {
     //     self.delete(&format!("/users/{}", id), vec![], callback)
     // }
+}
+
+impl std::fmt::Display for Category {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Category::Staircases => f.write_str("STAIRCASES"),
+            Category::Windows => f.write_str("WINDOWS"),
+            Category::Doors => f.write_str("DOORS"),
+            Category::Other => f.write_str("OTHER"),
+        }
+    }
 }

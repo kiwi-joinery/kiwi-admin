@@ -25,6 +25,9 @@ url = { version = "2.1.1", features = ["serde"] }
 headers = "0.3.2"
 imagesize = "0.8"
 num-rational = "0.3"
+base64 = "0.12.3"
+rand = { version = "0.7.3", features = ["wasm-bindgen"] }
+mime = "0.3.16"
 
 [dependencies.web-sys]
 version = "0.3.45"

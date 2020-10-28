@@ -6,12 +6,13 @@ use http::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use url::Url;
-use yew::format::{Nothing, Text};
+use yew::format::{Binary, Nothing};
 use yew::services::fetch::{FetchService, FetchTask};
 use yew::Callback;
 
 pub mod error;
 pub mod gallery;
+mod multipart;
 pub mod password_reset;
 pub mod session;
 pub mod users;
@@ -52,14 +53,14 @@ impl APIClient {
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
-        B: TextBody,
+        B: RequestBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
         let loader_task: Option<BoxedLoadingTask> = loader.map(|x| x(LoadingTaskConfig::default()));
         let mut url = self.base_url.join(path).unwrap();
         url.query_pairs_mut().extend_pairs(query);
         let mut builder = Request::builder().method(method).uri(url.as_str());
-        match B::content_type() {
+        match body.content_type() {
             Some(c) => builder.headers_mut().unwrap().typed_insert(c),
             None => {}
         }
@@ -67,11 +68,12 @@ impl APIClient {
             Some(a) => builder.headers_mut().unwrap().typed_insert(a.clone()),
             None => {}
         }
-        let handler = move |response: Response<Text>| {
+        let request: Binary = body.into();
+        let handler = move |response: Response<Binary>| {
             callback.emit(resolve(response));
             drop(loader_task);
         };
-        FetchService::fetch(builder.body(body).unwrap(), Callback::once(handler)).unwrap()
+        FetchService::fetch_binary(builder.body(request).unwrap(), Callback::once(handler)).unwrap()
     }
 
     #[inline]
@@ -98,7 +100,7 @@ impl APIClient {
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
-        B: TextBody,
+        B: RequestBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
         self.request(path, query, Method::POST, body, loader, callback)
@@ -114,7 +116,7 @@ impl APIClient {
         callback: Callback<Result<T, error::APIError>>,
     ) -> FetchTask
     where
-        B: TextBody,
+        B: RequestBody,
         for<'de> T: Deserialize<'de> + 'static,
     {
         self.request(path, query, Method::PUT, body, loader, callback)
@@ -135,35 +137,35 @@ impl APIClient {
     }
 }
 
-pub trait TextBody: Into<Text> {
-    fn content_type() -> Option<ContentType>;
+pub trait RequestBody: Into<Binary> {
+    fn content_type(&self) -> Option<ContentType>;
 }
 
 pub struct Empty;
 
-impl TextBody for Empty {
-    fn content_type() -> Option<ContentType> {
+impl RequestBody for Empty {
+    fn content_type(&self) -> Option<ContentType> {
         None
     }
 }
 
-impl Into<Text> for Empty {
-    fn into(self) -> Text {
+impl Into<Binary> for Empty {
+    fn into(self) -> Binary {
         Nothing.into()
     }
 }
 
 pub struct FormUrlEncoded<T>(T);
 
-impl<T: Serialize> TextBody for FormUrlEncoded<T> {
-    fn content_type() -> Option<ContentType> {
+impl<T: Serialize> RequestBody for FormUrlEncoded<T> {
+    fn content_type(&self) -> Option<ContentType> {
         Some(ContentType::form_url_encoded())
     }
 }
 
-impl<T: Serialize> Into<Text> for FormUrlEncoded<T> {
-    fn into(self) -> Text {
-        Ok(serde_urlencoded::to_string(self.0).unwrap())
+impl<T: Serialize> Into<Binary> for FormUrlEncoded<T> {
+    fn into(self) -> Binary {
+        Ok(serde_urlencoded::to_string(self.0).unwrap()).map(|x| x.into_bytes())
     }
 }
 
