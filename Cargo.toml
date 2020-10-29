@@ -29,6 +29,7 @@ base64 = "0.12.3"
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 mime = "0.3.16"
 enum-iterator = "0.6.0"
+js-sys = "0.3.45"
 
 [dependencies.web-sys]
 version = "0.3.45"

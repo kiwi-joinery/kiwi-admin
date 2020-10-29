@@ -4,6 +4,7 @@
 mod api;
 mod app;
 mod auth;
+mod bindings;
 mod components;
 mod form_data;
 mod loader_task;

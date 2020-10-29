@@ -433,6 +433,7 @@ dependencies = [
  "headers",
  "http",
  "imagesize",
+ "js-sys",
  "log",
  "mime",
  "num-rational",
