@@ -1,6 +1,7 @@
 use crate::api::error::APIError;
 use crate::api::gallery::Category;
 use crate::api::APIClient;
+use crate::components::enum_selector::EnumSelectorComponent;
 use crate::components::error::ErrorAlert;
 use crate::form_data::GetFormData;
 use crate::loader_task::{BoxedLoadingTask, LoadingFunction, LoadingTaskConfig};
@@ -13,14 +14,24 @@ use web_sys::{File, FormData};
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{FileData, ReaderService, ReaderTask};
+use yew_router::agent::RouteRequest;
 
 const MIN_RECOMMENDED_RESOLUTION: usize = 1920 * 1080;
 const RECOMMENDED_ASPECT: Ratio<usize> = Ratio::new_raw(16, 9);
+const FIELD_DESCRIPTION: &str = "description";
 
-#[derive(Default)]
 struct Form {
-    name: String,
-    email: String,
+    description: String,
+    category: Category,
+}
+
+impl Default for Form {
+    fn default() -> Self {
+        Self {
+            description: Default::default(),
+            category: Category::Staircases,
+        }
+    }
 }
 
 #[derive(Debug, Error, Clone)]
@@ -71,6 +82,7 @@ pub enum Msg {
     SelectFile(File),
     FileLoaded(FileData),
     Response(Result<(), APIError>),
+    CategoryChange(Category),
 }
 
 impl Component for CreateGalleryItemRoute {
@@ -93,15 +105,27 @@ impl Component for CreateGalleryItemRoute {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Submit(fd) => {
+                self.form.description = fd.get(FIELD_DESCRIPTION).as_string().unwrap();
                 self.task = Some(self.props.api_client.gallery_create(
                     &self.image.as_ref().unwrap().0,
-                    "".to_string(),
-                    Category::Doors,
+                    self.form.description.clone(),
+                    &self.form.category,
                     self.props.loader.clone(),
                     self.link.callback(Msg::Response),
                 ));
             }
-            Msg::Response(r) => {}
+            Msg::Response(r) => {
+                self.task = None;
+                match r {
+                    Ok(_) => {
+                        let mut agent = RouteAgentDispatcher::new();
+                        agent.send(RouteRequest::ChangeRoute(Route::from(AppRoute::Gallery)));
+                    }
+                    Err(e) => {
+                        self.error = Some(Error::APIError(e));
+                    }
+                }
+            }
             Msg::SelectFile(file) => {
                 self.loading_task = Some((*self.props.loader)(
                     LoadingTaskConfig::default().delay_full_appearance(false),
@@ -125,6 +149,10 @@ impl Component for CreateGalleryItemRoute {
                 }
                 self.loading_task = None;
             }
+            Msg::CategoryChange(c) => {
+                log::info!("{:?}", c);
+                self.form.category = c;
+            }
         }
         true
     }
@@ -147,6 +175,7 @@ impl Component for CreateGalleryItemRoute {
             }
             _ => unreachable!(),
         });
+        let oncategory = self.link.callback(|x| Msg::CategoryChange(x));
         html! {
             <div class="container">
                 <div class="row">
@@ -165,9 +194,11 @@ impl Component for CreateGalleryItemRoute {
                             { self.image_info() }
                             <fieldset class="form-group">
                                 <label for="exampleFormControlSelect1">{ "Category" }</label>
-                                <select class="form-control form-control-lg" id="exampleFormControlSelect1">
-                                    <option>{"1"}</option>
-                                </select>
+                                <EnumSelectorComponent<Category>
+                                    callback=oncategory
+                                    classes="form-control form-control-lg"
+                                    value=self.form.category.clone()
+                                />
                             </fieldset>
                             <fieldset class="form-group">
                                 <label for="description_textarea">{ "Image Description" }</label>
@@ -176,6 +207,8 @@ impl Component for CreateGalleryItemRoute {
                                     id="description_textarea"
                                     rows="4"
                                     maxlength="4096"
+                                    name=FIELD_DESCRIPTION
+                                    value=&self.form.description
                                     />
                             </fieldset>
                             <ErrorAlert<Error> error=&self.error />

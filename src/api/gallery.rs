@@ -2,6 +2,7 @@ use crate::api::error::APIError;
 use crate::api::multipart::{Multipart, MultipartFile};
 use crate::api::APIClient;
 use crate::loader_task::LoadingFunction;
+use enum_iterator::IntoEnumIterator;
 use http::Method;
 use serde::Deserialize;
 use std::fmt::Formatter;
@@ -10,7 +11,7 @@ use yew::services::fetch::FetchTask;
 use yew::services::reader::FileData;
 use yew::Callback;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoEnumIterator, Clone, PartialEq)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Category {
     Staircases,
@@ -48,13 +49,13 @@ impl APIClient {
         &self,
         image: &FileData,
         description: String,
-        category: Category,
+        category: &Category,
         loader: LoadingFunction,
         callback: Callback<Result<(), APIError>>,
     ) -> FetchTask {
         let mut form = Multipart::new();
         form.add_text("description", description);
-        form.add_text("category", category.to_string());
+        form.add_text("category", category.to_string().to_ascii_uppercase());
         form.add_file(MultipartFile::new(
             "image",
             image.content.clone(),
@@ -95,10 +96,10 @@ impl APIClient {
 impl std::fmt::Display for Category {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Category::Staircases => f.write_str("STAIRCASES"),
-            Category::Windows => f.write_str("WINDOWS"),
-            Category::Doors => f.write_str("DOORS"),
-            Category::Other => f.write_str("OTHER"),
+            Category::Staircases => f.write_str("Staircases"),
+            Category::Windows => f.write_str("Windows"),
+            Category::Doors => f.write_str("Doors"),
+            Category::Other => f.write_str("Other"),
         }
     }
 }

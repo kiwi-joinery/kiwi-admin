@@ -11,6 +11,7 @@ use crate::loader_task::{LoadingFunction, LoadingTask, LoadingTaskConfig};
 use crate::routes::dashboard::DashboardRoute;
 use crate::routes::forgot_password::ForgotPasswordRoute;
 use crate::routes::gallery_create::CreateGalleryItemRoute;
+use crate::routes::gallery_list::ListGalleryRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
 use crate::routes::password_reset::PasswordResetRoute;
@@ -185,7 +186,10 @@ impl Component for App {
                             },
                             AppRoute::Gallery => html! {
                                 <SidebarComponent active=SidebarActive::Gallery>
-                                    <p>{"Gallery"}</p>
+                                    <ListGalleryRoute
+                                        on_loading=loading_function.clone()
+                                        api_client=api_client.clone()
+                                    />
                                 </SidebarComponent>
                             },
                             AppRoute::GalleryCreate => html! {

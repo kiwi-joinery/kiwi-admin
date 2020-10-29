@@ -1,6 +1,7 @@
 pub mod dashboard;
 pub mod forgot_password;
 pub mod gallery_create;
+pub mod gallery_list;
 pub mod login;
 pub mod not_found;
 pub mod password_reset;

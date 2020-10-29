@@ -1,3 +1,4 @@
+pub mod enum_selector;
 pub mod error;
 pub mod footer;
 pub mod header;
