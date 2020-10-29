@@ -1,7 +1,6 @@
 use crate::api::error::APIError;
 use crate::api::gallery::GalleryItemResponse;
-use crate::api::users::UserResponseItem;
-use crate::api::{APIClient, Counted};
+use crate::api::APIClient;
 use crate::loader_task::LoadingFunction;
 use crate::routes::{AppRoute, RouterAnchor};
 use yew::prelude::*;

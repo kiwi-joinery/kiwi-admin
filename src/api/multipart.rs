@@ -1,8 +1,9 @@
 use crate::api::RequestBody;
 use headers::ContentType;
 use mime::Mime;
-use rand::distributions::Standard;
+use rand::distributions::Alphanumeric;
 use rand::Rng;
+use std::iter;
 use yew::format::Binary;
 
 pub struct Multipart {
@@ -31,9 +32,11 @@ impl MultipartFile {
 
 impl Multipart {
     pub fn new() -> Self {
-        let rng = rand::thread_rng();
-        let v: Vec<u8> = rng.sample_iter(&Standard).take(51).collect();
-        let boundary = base64::encode(v);
+        let mut rng = rand::thread_rng();
+        let boundary: String = iter::repeat(())
+            .map(|()| rng.sample(Alphanumeric))
+            .take(65)
+            .collect();
         Self {
             boundary,
             text_fields: Vec::new(),
