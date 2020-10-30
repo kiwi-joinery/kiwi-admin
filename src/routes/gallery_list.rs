@@ -1,5 +1,5 @@
 use crate::api::error::APIError;
-use crate::api::gallery::{Category, GalleryListResponse};
+use crate::api::gallery::{Category, GalleryItemResponse, GalleryListResponse};
 use crate::api::APIClient;
 use crate::bindings::sortable::{OnEndEvent, Sortable, SortableOptions};
 use crate::components::error::ErrorAlert;
@@ -110,7 +110,7 @@ impl Component for ListGalleryRoute {
         let document = window.document().expect("should have a document on window");
 
         for i in Category::into_enum_iter() {
-            let e = document.get_element_by_id(i.serialize().as_str());
+            let e = document.get_element_by_id(category_to_id(&i).as_str());
             match e {
                 Some(e) => {
                     let options = SortableOptions::new();
@@ -140,17 +140,41 @@ impl ListGalleryRoute {
             .unwrap_or(&default);
         if items.len() > 0 {
             return html! {
-                <>
-                <h4 class="p-2 mb-2 bg-light text-dark">{category.to_string()}</h4>
-                <ul id={category.serialize()}>
-                    <li>{"item 1"}</li>
-                    <li>{"item 2"}</li>
-                    <li>{"item 3"}</li>
-                </ul>
-                </>
+                <div class="row">
+                    <h4 class="col-12 p-2 mb-3 bg-light text-dark">{category.to_string()}</h4>
+                    <div class="col card-deck" id={category_to_id(&category)}>
+                        {items.iter().map(|i| self.render_item(i)).collect::<Html>()}
+                    </div>
+                </div>
             };
         } else {
             return html! {};
         }
     }
+
+    fn render_item(&self, item: &GalleryItemResponse) -> Html {
+        let image = item.best_matching_width(200);
+        html! {
+            <div class="card mb-3" style="min-width: 200px; max-width: 200px; height: 200px">
+                {
+                    match image {
+                        Some(i) => {
+                            html! { <img style="max-height: 115px; object-fit: contain" class="card-img-top" src=i.url/>}
+                        }
+                        None => { html! {} }
+                    }
+                }
+                <div class="card-body p-2">
+                    <p
+                        class="card-text"
+                        style="overflow: hidden; height: 100%;"
+                    >{&item.description}</p>
+                </div>
+            </div>
+        }
+    }
+}
+
+fn category_to_id(category: &Category) -> String {
+    format!("sortable-container-{}", category.serialize())
 }

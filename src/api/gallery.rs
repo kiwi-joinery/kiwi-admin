@@ -46,12 +46,31 @@ pub struct GalleryItemResponse {
     pub files: Vec<GalleryFileResponse>,
 }
 
+impl GalleryItemResponse {
+    pub fn image_with_width_geq(&self, width: u32) -> Option<&GalleryFileResponse> {
+        self.files
+            .iter()
+            .filter(|f| f.width >= width)
+            .min_by_key(|f| f.width)
+    }
+    pub fn image_with_width_leq(&self, width: u32) -> Option<&GalleryFileResponse> {
+        self.files
+            .iter()
+            .filter(|f| f.width <= width)
+            .max_by_key(|f| f.width)
+    }
+    pub fn best_matching_width(&self, width: u32) -> Option<&GalleryFileResponse> {
+        self.image_with_width_geq(width)
+            .or(self.image_with_width_leq(width))
+    }
+}
+
 #[derive(Deserialize)]
 pub struct GalleryFileResponse {
-    url: Url,
-    height: u32,
-    width: u32,
-    bytes: u32,
+    pub url: Url,
+    pub height: u32,
+    pub width: u32,
+    pub bytes: u32,
 }
 
 pub type GalleryListResponse = HashMap<Category, Vec<GalleryItemResponse>>;
