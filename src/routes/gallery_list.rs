@@ -1,9 +1,12 @@
 use crate::api::error::APIError;
-use crate::api::gallery::GalleryItemResponse;
+use crate::api::gallery::{Category, GalleryListResponse};
 use crate::api::APIClient;
 use crate::bindings::sortable::{OnEndEvent, Sortable, SortableOptions};
+use crate::components::error::ErrorAlert;
 use crate::loader_task::LoadingFunction;
 use crate::routes::{AppRoute, RouterAnchor};
+use enum_iterator::IntoEnumIterator;
+use std::collections::HashMap;
 use wasm_bindgen::closure::Closure;
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
@@ -13,8 +16,8 @@ pub struct ListGalleryRoute {
     link: ComponentLink<Self>,
     task: Option<FetchTask>,
     error: Option<APIError>,
-    results: Option<Vec<GalleryItemResponse>>,
-    on_end: Closure<dyn FnMut(OnEndEvent)>,
+    results: Option<GalleryListResponse>,
+    on_ends: HashMap<Category, Closure<dyn FnMut(OnEndEvent)>>,
 }
 
 #[derive(Properties, Clone, PartialEq)]
@@ -24,7 +27,7 @@ pub struct Props {
 }
 
 pub enum Msg {
-    Response(Result<(), APIError>),
+    Response(Result<GalleryListResponse, APIError>),
 }
 
 impl Component for ListGalleryRoute {
@@ -32,24 +35,41 @@ impl Component for ListGalleryRoute {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let on_end = Closure::wrap(Box::new(move |event: OnEndEvent| {
-            log::info!("{} {}", event.old_index(), event.new_index());
-        }) as Box<dyn FnMut(OnEndEvent)>);
+        let mut on_ends = HashMap::new();
+        for i in Category::into_enum_iter() {
+            on_ends.insert(
+                i.clone(),
+                Closure::wrap(Box::new(move |e: OnEndEvent| {
+                    if e.old_index() != e.new_index() {
+                        log::info!("{} {} {}", &i.to_string(), e.old_index(), e.new_index());
+                    }
+                }) as Box<dyn FnMut(OnEndEvent)>),
+            );
+        }
         Self {
             props,
             link,
             task: None,
             error: None,
             results: None,
-            on_end,
+            on_ends,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Response(_r) => {
+            Msg::Response(r) => {
                 self.task = None;
-                self.results = None;
+                match r {
+                    Ok(r) => {
+                        self.error = None;
+                        self.results = Some(r);
+                    }
+                    Err(e) => {
+                        self.results = None;
+                        self.error = Some(e)
+                    }
+                }
             }
         }
         true
@@ -68,24 +88,69 @@ impl Component for ListGalleryRoute {
         html! {
         <>
             <h1 class="mb-3">{ "Gallery" } </h1>
-            <RouterAnchor route=AppRoute::GalleryCreate classes="btn btn-secondary">
+            <RouterAnchor route=AppRoute::GalleryCreate classes="btn btn-secondary mb-3">
                 { "Upload new image" }
             </RouterAnchor>
-            <ul id="items">
-                <li>{"item 1"}</li>
-                <li>{"item 2"}</li>
-                <li>{"item 3"}</li>
-            </ul>
+            {
+                if self.error.is_some() {
+                    html!{<ErrorAlert<APIError> classes="mt-3" error=&self.error />}
+                } else {
+                    Category::into_enum_iter().map(|c| self.render_category(c)).collect::<Html>()
+                }
+            }
         </>
         }
     }
 
-    fn rendered(&mut self, _first_render: bool) {
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.refresh();
+        }
         let window = web_sys::window().expect("no global `window` exists");
         let document = window.document().expect("should have a document on window");
-        let element = document.get_element_by_id("items").unwrap();
-        let options = SortableOptions::new();
-        options.set_on_end(&self.on_end);
-        Sortable::create(&element, options);
+
+        for i in Category::into_enum_iter() {
+            let e = document.get_element_by_id(i.serialize().as_str());
+            match e {
+                Some(e) => {
+                    let options = SortableOptions::new();
+                    options.set_on_end(&self.on_ends[&i]);
+                    Sortable::create(&e, options);
+                }
+                None => {}
+            }
+        }
+    }
+}
+
+impl ListGalleryRoute {
+    fn refresh(&mut self) {
+        self.task = Some(self.props.api_client.gallery_list(
+            self.props.on_loading.clone(),
+            self.link.callback(|x| Msg::Response(x)),
+        ));
+    }
+
+    fn render_category(&self, category: Category) -> Html {
+        let default = Vec::new();
+        let items = self
+            .results
+            .as_ref()
+            .and_then(|x| x.get(&category))
+            .unwrap_or(&default);
+        if items.len() > 0 {
+            return html! {
+                <>
+                <h4 class="p-2 mb-2 bg-light text-dark">{category.to_string()}</h4>
+                <ul id={category.serialize()}>
+                    <li>{"item 1"}</li>
+                    <li>{"item 2"}</li>
+                    <li>{"item 3"}</li>
+                </ul>
+                </>
+            };
+        } else {
+            return html! {};
+        }
     }
 }

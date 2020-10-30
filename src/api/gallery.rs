@@ -4,20 +4,38 @@ use crate::api::APIClient;
 use crate::loader_task::LoadingFunction;
 use enum_iterator::IntoEnumIterator;
 use http::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt::Formatter;
 use url::Url;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::FileData;
 use yew::Callback;
 
-#[derive(Debug, Deserialize, IntoEnumIterator, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, IntoEnumIterator, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Category {
     Staircases,
     Windows,
     Doors,
     Other,
+}
+
+impl std::fmt::Display for Category {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Category::Staircases => f.write_str("Staircases"),
+            Category::Windows => f.write_str("Windows"),
+            Category::Doors => f.write_str("Doors"),
+            Category::Other => f.write_str("Other"),
+        }
+    }
+}
+
+impl Category {
+    pub fn serialize(&self) -> String {
+        serde_plain::to_string(&self).unwrap()
+    }
 }
 
 #[derive(Deserialize)]
@@ -36,11 +54,13 @@ pub struct GalleryFileResponse {
     bytes: u32,
 }
 
+pub type GalleryListResponse = HashMap<Category, Vec<GalleryItemResponse>>;
+
 impl APIClient {
     pub fn gallery_list(
         &self,
         loader: LoadingFunction,
-        callback: Callback<Result<Vec<GalleryItemResponse>, APIError>>,
+        callback: Callback<Result<GalleryListResponse, APIError>>,
     ) -> FetchTask {
         self.get("gallery/list", vec![], Some(loader), callback)
     }
@@ -91,15 +111,4 @@ impl APIClient {
     // ) -> FetchTask {
     //     self.delete(&format!("/users/{}", id), vec![], callback)
     // }
-}
-
-impl std::fmt::Display for Category {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Category::Staircases => f.write_str("Staircases"),
-            Category::Windows => f.write_str("Windows"),
-            Category::Doors => f.write_str("Doors"),
-            Category::Other => f.write_str("Other"),
-        }
-    }
 }
