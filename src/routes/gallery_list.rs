@@ -140,7 +140,7 @@ impl ListGalleryRoute {
             .unwrap_or(&default);
         if items.len() > 0 {
             return html! {
-                <div class="row">
+                <div class="row gallery-list-category">
                     <h4 class="col-12 p-2 mb-3 bg-light text-dark">{category.to_string()}</h4>
                     <div class="col card-deck" id={category_to_id(&category)}>
                         {items.iter().map(|i| self.render_item(i)).collect::<Html>()}
@@ -155,22 +155,19 @@ impl ListGalleryRoute {
     fn render_item(&self, item: &GalleryItemResponse) -> Html {
         let image = item.best_matching_width(200);
         html! {
-            <div class="card mb-3" style="min-width: 200px; max-width: 200px; height: 200px">
+            <RouterAnchor route=AppRoute::GalleryEdit(item.id) classes="card mb-3">
                 {
                     match image {
                         Some(i) => {
-                            html! { <img style="max-height: 115px; object-fit: contain" class="card-img-top" src=i.url/>}
+                            html! { <img class="card-img-top" src=i.url/>}
                         }
                         None => { html! {} }
                     }
                 }
                 <div class="card-body p-2">
-                    <p
-                        class="card-text"
-                        style="overflow: hidden; height: 100%;"
-                    >{&item.description}</p>
+                    <p class="card-text">{&item.description}</p>
                 </div>
-            </div>
+            </RouterAnchor>
         }
     }
 }

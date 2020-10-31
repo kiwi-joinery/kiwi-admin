@@ -1,0 +1,21 @@
+.gallery-list-category .card {
+    min-width: 200px;
+    max-width: 200px;
+    height: 200px;
+    text-decoration: none;
+    color: #212529;
+}
+
+.gallery-list-category:hover .card:hover {
+    background-color: #f8f9fa;
+}
+
+.gallery-list-category .card-body {
+    overflow: hidden;
+    height: 100%;
+}
+
+.gallery-list-category img {
+    max-height: 115px;
+    object-fit: contain;
+}
