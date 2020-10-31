@@ -18,6 +18,7 @@ pub struct ListGalleryRoute {
     error: Option<APIError>,
     results: Option<GalleryListResponse>,
     on_ends: HashMap<Category, Closure<dyn FnMut(OnEndEvent)>>,
+    do_refresh: bool, // Hack to force yew to rerender the lists
 }
 
 #[derive(Properties, Clone, PartialEq)]
@@ -30,6 +31,7 @@ pub enum Msg {
     Response(Result<GalleryListResponse, APIError>),
     PositionChange(Category, u32, u32),
     PositionChangeResponse(Result<(), APIError>),
+    CompleteRefresh,
 }
 
 impl Component for ListGalleryRoute {
@@ -59,6 +61,7 @@ impl Component for ListGalleryRoute {
             error: None,
             results: None,
             on_ends,
+            do_refresh: false,
         }
     }
 
@@ -83,7 +86,8 @@ impl Component for ListGalleryRoute {
                 let (move_to_front, move_after_id) = if new == 0 {
                     (true, None)
                 } else {
-                    let id = category_list.get(new as usize - 1).unwrap().id;
+                    let prev_index = if new > old { new } else { new - 1 };
+                    let id = category_list.get(prev_index as usize).unwrap().id;
                     (false, Some(id))
                 };
                 // Do the swap in local storage
@@ -99,9 +103,15 @@ impl Component for ListGalleryRoute {
                     self.props.on_loading.clone(),
                     self.link.callback(|x| Msg::PositionChangeResponse(x)),
                 ));
+                self.do_refresh = true;
+                self.link.send_message(Msg::CompleteRefresh);
             }
             Msg::PositionChangeResponse(_) => {
                 self.refresh();
+                return false; // Defer until the response from refresh
+            }
+            Msg::CompleteRefresh => {
+                self.do_refresh = false;
             }
         };
         true
@@ -126,8 +136,10 @@ impl Component for ListGalleryRoute {
             {
                 if self.error.is_some() {
                     html!{<ErrorAlert<APIError> classes="mt-3" error=&self.error />}
-                } else {
+                } else if !self.do_refresh {
                     Category::into_enum_iter().map(|c| self.render_category(c)).collect::<Html>()
+                } else {
+                    html! {}
                 }
             }
         </>
