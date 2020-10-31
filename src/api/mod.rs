@@ -70,8 +70,8 @@ impl APIClient {
         }
         let request: Binary = body.into();
         let handler = move |response: Response<Binary>| {
-            callback.emit(resolve(response));
             drop(loader_task);
+            callback.emit(resolve(response));
         };
         FetchService::fetch_binary(builder.body(request).unwrap(), Callback::once(handler)).unwrap()
     }

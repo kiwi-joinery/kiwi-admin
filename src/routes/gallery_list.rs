@@ -28,6 +28,8 @@ pub struct Props {
 
 pub enum Msg {
     Response(Result<GalleryListResponse, APIError>),
+    PositionChange(Category, u32, u32),
+    PositionChangeResponse(Result<(), APIError>),
 }
 
 impl Component for ListGalleryRoute {
@@ -36,15 +38,19 @@ impl Component for ListGalleryRoute {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let mut on_ends = HashMap::new();
-        for i in Category::into_enum_iter() {
-            on_ends.insert(
-                i.clone(),
-                Closure::wrap(Box::new(move |e: OnEndEvent| {
-                    if e.old_index() != e.new_index() {
-                        log::info!("{} {} {}", &i.to_string(), e.old_index(), e.new_index());
-                    }
-                }) as Box<dyn FnMut(OnEndEvent)>),
-            );
+        for category in Category::into_enum_iter() {
+            let link_clone = link.clone();
+            let category_clone = category.clone();
+            let f: Box<dyn FnMut(OnEndEvent)> = Box::new(move |e: OnEndEvent| {
+                if e.old_index() != e.new_index() {
+                    link_clone.send_message(Msg::PositionChange(
+                        category_clone.clone(),
+                        e.old_index(),
+                        e.new_index(),
+                    ));
+                }
+            });
+            on_ends.insert(category.clone(), Closure::wrap(f));
         }
         Self {
             props,
@@ -71,7 +77,33 @@ impl Component for ListGalleryRoute {
                     }
                 }
             }
-        }
+            Msg::PositionChange(category, old, new) => {
+                let category_list = self.results.as_mut().unwrap().get_mut(&category).unwrap();
+                let item = category_list.get(old as usize).unwrap().clone();
+                let (move_to_front, move_after_id) = if new == 0 {
+                    (true, None)
+                } else {
+                    let id = category_list.get(new as usize - 1).unwrap().id;
+                    (false, Some(id))
+                };
+                // Do the swap in local storage
+                let removed = category_list.remove(old as usize);
+                category_list.insert(new as usize, removed);
+                // Send the swap details to the server
+                self.task = Some(self.props.api_client.gallery_update(
+                    item.id,
+                    item.description.clone(),
+                    item.category.clone(),
+                    move_after_id,
+                    move_to_front,
+                    self.props.on_loading.clone(),
+                    self.link.callback(|x| Msg::PositionChangeResponse(x)),
+                ));
+            }
+            Msg::PositionChangeResponse(_) => {
+                self.refresh();
+            }
+        };
         true
     }
 

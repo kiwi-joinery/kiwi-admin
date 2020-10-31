@@ -1,6 +1,6 @@
 use crate::api::error::APIError;
 use crate::api::multipart::{Multipart, MultipartFile};
-use crate::api::APIClient;
+use crate::api::{APIClient, FormUrlEncoded};
 use crate::loader_task::LoadingFunction;
 use enum_iterator::IntoEnumIterator;
 use http::Method;
@@ -38,7 +38,7 @@ impl Category {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GalleryItemResponse {
     pub id: u32,
     pub description: String,
@@ -65,7 +65,7 @@ impl GalleryItemResponse {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GalleryFileResponse {
     pub url: Url,
     pub height: u32,
@@ -94,7 +94,7 @@ impl APIClient {
     ) -> FetchTask {
         let mut form = Multipart::new();
         form.add_text("description", description);
-        form.add_text("category", category.to_string().to_ascii_uppercase());
+        form.add_text("category", category.serialize());
         form.add_file(MultipartFile::new(
             "image",
             image.content.clone(),
@@ -109,19 +109,35 @@ impl APIClient {
             callback,
         )
     }
-    //
-    // pub fn users_update(
-    //     &self,
-    //     id: i32,
-    //     name: String,
-    //     email: String,
-    //     callback: Callback<Result<UserResponseItem, APIError>>,
-    // ) -> FetchTask {
-    //     let mut body = HashMap::new();
-    //     body.insert("name", name);
-    //     body.insert("email", email);
-    //     self.put(&format!("/users/{}", id), vec![], body, callback)
-    // }
+    pub fn gallery_update(
+        &self,
+        id: u32,
+        description: String,
+        category: Category,
+        move_after_id: Option<u32>,
+        move_to_front: bool,
+        loader: LoadingFunction,
+        callback: Callback<Result<(), APIError>>,
+    ) -> FetchTask {
+        let mut body = HashMap::new();
+        body.insert("description", description);
+        body.insert("category", category.serialize());
+        match move_after_id {
+            None => {}
+            Some(id) => {
+                body.insert("move_after_id", id.to_string());
+            }
+        }
+        body.insert("move_to_front", move_to_front.to_string());
+        self.put(
+            &format!("gallery/{}", id),
+            vec![],
+            FormUrlEncoded(body),
+            Some(loader),
+            callback,
+        )
+    }
+
     //
     // pub fn users_delete(
     //     &self,
