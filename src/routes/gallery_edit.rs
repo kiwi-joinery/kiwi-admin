@@ -1,5 +1,5 @@
 use crate::api::error::APIError;
-use crate::api::gallery::{Category, GalleryItemResponse};
+use crate::api::gallery::{Category, GalleryFileResponse, GalleryItemResponse};
 use crate::api::APIClient;
 use crate::components::enum_selector::EnumSelectorComponent;
 use crate::components::error::ErrorAlert;
@@ -36,6 +36,7 @@ pub struct EditGalleryItemRoute {
     edit_error: Option<APIError>,
     delete_error: Option<APIError>,
     form: Form,
+    image: Option<GalleryFileResponse>,
 }
 
 #[derive(Properties, Clone, PartialEq)]
@@ -73,6 +74,7 @@ impl Component for EditGalleryItemRoute {
             edit_error: None,
             delete_error: None,
             form: Default::default(),
+            image: None,
         }
     }
 
@@ -97,6 +99,7 @@ impl Component for EditGalleryItemRoute {
                 self.load_task = None;
                 match r {
                     Ok(x) => {
+                        self.image = x.best_matching_width(800).map(|x| x.clone());
                         self.form.description = x.description;
                         self.form.category = x.category;
                     }
@@ -184,6 +187,12 @@ impl EditGalleryItemRoute {
         html! {
         <>
             <h1 class="mb-3">{ "Edit image" }</h1>
+            {
+                match &self.image {
+                    None => html! {},
+                    Some(i) => html! {<img class="img-fluid rounded mb-3" src=i.url/>},
+                }
+            }
             <form onsubmit=onsubmit>
                 <fieldset class="form-group">
                     <label>{ "Category" }</label>
