@@ -11,6 +11,7 @@ use crate::loader_task::{LoadingFunction, LoadingTask, LoadingTaskConfig};
 use crate::routes::dashboard::DashboardRoute;
 use crate::routes::forgot_password::ForgotPasswordRoute;
 use crate::routes::gallery_create::CreateGalleryItemRoute;
+use crate::routes::gallery_edit::EditGalleryItemRoute;
 use crate::routes::gallery_list::ListGalleryRoute;
 use crate::routes::login::LoginRoute;
 use crate::routes::not_found::NotFoundRoute;
@@ -200,6 +201,15 @@ impl Component for App {
                                     />
                                 </SidebarComponent>
                             },
+                            AppRoute::GalleryEdit(id) => html! {
+                                <SidebarComponent>
+                                    <EditGalleryItemRoute
+                                        on_loading=loading_function.clone()
+                                        api_client=api_client.clone()
+                                        item_id=id
+                                    />
+                                </SidebarComponent>
+                            },
                             AppRoute::ForgotPassword => html! {
                                 <ForgotPasswordRoute
                                     on_loading=loading_function.clone()
@@ -213,7 +223,6 @@ impl Component for App {
                                 />
                             },
                             AppRoute::NotFound(_) => html! { <NotFoundRoute/> },
-                            _ => html! {},
                         }
                     })
                 />

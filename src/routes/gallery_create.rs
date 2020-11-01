@@ -193,7 +193,7 @@ impl Component for CreateGalleryItemRoute {
                             </fieldset>
                             { self.image_info() }
                             <fieldset class="form-group">
-                                <label for="exampleFormControlSelect1">{ "Category" }</label>
+                                <label>{ "Category" }</label>
                                 <EnumSelectorComponent<Category>
                                     callback=oncategory
                                     classes="form-control form-control-lg"

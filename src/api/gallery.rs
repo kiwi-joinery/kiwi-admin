@@ -138,12 +138,21 @@ impl APIClient {
         )
     }
 
-    //
-    // pub fn users_delete(
-    //     &self,
-    //     id: i32,
-    //     callback: Callback<Result<UserResponseItem, APIError>>,
-    // ) -> FetchTask {
-    //     self.delete(&format!("/users/{}", id), vec![], callback)
-    // }
+    pub fn gallery_get(
+        &self,
+        id: u32,
+        loader: LoadingFunction,
+        callback: Callback<Result<GalleryItemResponse, APIError>>,
+    ) -> FetchTask {
+        self.get(&format!("gallery/{}", id), vec![], Some(loader), callback)
+    }
+
+    pub fn gallery_delete(
+        &self,
+        id: u32,
+        loader: LoadingFunction,
+        callback: Callback<Result<(), APIError>>,
+    ) -> FetchTask {
+        self.delete(&format!("gallery/{}", id), vec![], Some(loader), callback)
+    }
 }
