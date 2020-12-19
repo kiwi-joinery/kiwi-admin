@@ -15,3 +15,9 @@ To build requires Rust and:
 - `npm install --global rollup`
 
 The script `./dev.sh` will build and host a development version locally.
+
+## Screnshots
+
+![alt text](./screenshots/users.png)
+
+![alt text](./screenshots/gallery.png)
