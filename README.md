@@ -16,7 +16,7 @@ To build requires Rust and:
 
 The script `./dev.sh` will build and host a development version locally.
 
-## Screnshots
+## Screenshots
 
 ![alt text](./screenshots/users.png)
 
