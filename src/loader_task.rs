@@ -1,7 +1,7 @@
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub trait LoadingTask: Drop {
+pub trait LoadingTask {
     fn set_text(&self, x: Option<String>);
 }
 

@@ -31,6 +31,8 @@ wasm-logger = "0.2.0"
 wee_alloc = { version = "0.4.5" }
 yew = "0.17"
 yew-router = { version = "0.14.0", features = ["default", "components"] }
+lexical-core = { version = "0.7.5" } # TODO: Remove
+
 
 [dependencies.web-sys]
 version = "0.3.45"
