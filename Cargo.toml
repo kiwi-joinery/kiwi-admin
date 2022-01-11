@@ -16,6 +16,7 @@ headers = "0.3.2"
 http = "0.2.1"
 imagesize = "0.8"
 js-sys = "0.3.45"
+lexical-core = { version = "0.7.5" } # TODO: Remove
 log = "0.4.6"
 mime = "0.3.16"
 num-rational = "0.3"
@@ -31,9 +32,7 @@ wasm-logger = "0.2.0"
 wee_alloc = { version = "0.4.5" }
 yew = "0.17"
 yew-router = { version = "0.14.0", features = ["default", "components"] }
-lexical-core = { version = "0.7.5" } # TODO: Remove
-
 
 [dependencies.web-sys]
 version = "0.3.45"
-features = [ "FormData", "HtmlFormElement", "EventTarget", "FileList", "File", "Performance", "HtmlSelectElement" ]
+features = ["FormData", "HtmlFormElement", "EventTarget", "FileList", "File", "Performance", "HtmlSelectElement"]
